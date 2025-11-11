@@ -14,6 +14,7 @@ bool read_annihilation(annihilation *new_annihilation, FILE *source,
                        double eff_by_energy[COLS]);
 void print_lor(lor *new_lor, FILE *output);
 void read_eff(FILE *source, double eff_by_energy[COLS]);
+void read_ranges_and_energies(FILE *source, double ranges_mm[RANGE_COLS], double energies_keV[RANGE_COLS]);
 void print_sym_matrix(sym_matrix *mat, FILE *output);
 bool read_vec(vec3d *vec, FILE *source);
 bool read_sym(sym_matrix *mat, FILE *source);

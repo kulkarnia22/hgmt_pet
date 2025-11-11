@@ -103,7 +103,8 @@ void print_histogram(histogram *hist) {
   for (int i = 0; i < hist->num_bars; i++) {
     printf("%lf-%lf: %lf\n", hist->min + i * increment,
            hist->min + (i + 1) * increment,
-           ((double)hist->counts[i]) / hist->count);
+           (double)hist->counts[i]);
+           //((double)hist->counts[i]) / hist->count);
   }
 }
 double linear_interpolation(double nums[COLS], double min, double max,
@@ -112,8 +113,15 @@ double linear_interpolation(double nums[COLS], double min, double max,
   int i_l = (int)i;
   int i_r = i_l + 1;
   double i_space = i - i_l;
+  /*if (value > 250){
+    printf("i = %.5f, i_l = %d, i_r = %d, i_space = %.5f\n", i, i_l, i_r, i_space);
+    printf("nums[%d] = %.17g, nums[%d] = %.17g\n", i_l, nums[i_l], i_r, nums[i_r]);
+    printf("final = %.3f\n", nums[i_l] * i_space + nums[i_r] * (1.0 - i_space));
+  }*/
   return nums[i_l] * i_space + nums[i_r] * (1.0 - i_space);
 }
+
+
 void printm(int num, uint mod) {
   if (num % mod == 0)
     printf("%i\n", num);

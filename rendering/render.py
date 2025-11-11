@@ -32,13 +32,19 @@ if __name__ == "__main__":
         extent=[-x_len / 2, x_len / 2, -y_len / 2, y_len / 2],
         origin="lower",
     )
+    """img = ax.imshow(
+        images[-1, :, :, idx_b],
+        cmap="gray",
+        extent=[-x_len / 2, x_len / 2, -y_len / 2, y_len / 2],
+        origin="lower",
+    )"""
     cbar = fig.colorbar(img, ax=ax, label="Intensity")
 
     ax_a = plt.axes([0.15, 0.1, 0.65, 0.03])
     ax_b = plt.axes([0.15, 0.05, 0.65, 0.03])
 
     slider_a = Slider(ax_a, "iterations", 0, iterations - 1, valinit=idx_a, valstep=1)
-    slider_b = Slider(ax_b, "z index", 0, z_res - 1, valinit=idx_b, valstep=1)
+    #slider_b = Slider(ax_b, "z index", 0, z_res - 1, valinit=idx_b, valstep=1)
 
     def update(val):
         idx_a = int(slider_a.val)
@@ -47,8 +53,27 @@ if __name__ == "__main__":
         fig.canvas.draw_idle()
 
     slider_a.on_changed(update)
-    slider_b.on_changed(update)
+    #slider_b.on_changed(update)
 
-    plt.xlabel("X")
-    plt.ylabel("Y")
+
+    #Brief center analysis:
+    # final_image is a 2D NumPy array of shape (Y_RES, X_RES)
+    final_image = images[-1, :, :, idx_b]
+    max_index = np.unravel_index(np.argmax(final_image), final_image.shape)
+    j_max, i_max = max_index  # row (y), column (x)
+
+    x_len_per_voxel = x_len / final_image.shape[1] 
+    y_len_per_voxel = y_len / final_image.shape[0]
+
+    # Convert index to coordinate: shift from center
+    x_coord = (i_max + 0.5) * x_len_per_voxel - x_len / 2
+    y_coord = (j_max + 0.5) * y_len_per_voxel - y_len / 2
+
+    print(f"Brightest voxel index: (i={i_max}, j={j_max})")
+    print(f"Real-world coordinates: x = {x_coord:.3f} cm, y = {y_coord:.3f} cm")
+
+    plt.xlabel("X(cm)")
+    plt.ylabel("Y(cm)")
+    plt.title("Spatial Resolution of Positron Point Source")
+    plt.savefig("reconstruction_output.png", dpi=300)
     plt.show()

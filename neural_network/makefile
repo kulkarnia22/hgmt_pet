@@ -1,6 +1,8 @@
 CC=gcc
 CXX=g++
 
+PYTORCH_PATH = $(HOME)/libtorch
+
 # Common flags
 COMMON_FLAGS = -Wall -O3
 BASEFLAGS = $(COMMON_FLAGS) -lm

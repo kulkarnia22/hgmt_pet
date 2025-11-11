@@ -1,0 +1,17 @@
+# A topas file containing a water phantom and point source
+
+# Define the water phantom with same geometry as Derenzo
+s:Ge/PSFPhantom/Type      = "TsCylinder"
+s:Ge/PSFPhantom/Material  = "G4_WATER"
+s:Ge/PSFPhantom/Parent    = "AirBox"
+d:Ge/PSFPhantom/RMax      = 10.6 cm
+d:Ge/PSFPhantom/HL        = 4.0 cm
+s:Ge/PSFPhantom/Color     = "green"
+
+# Define isotropic point source
+s:So/PointSource/Type             = "Isotropic"
+s:So/PointSource/Component        = "PSFPhantom"
+s:So/PointSource/BeamParticle     = "e+"
+d:So/PointSource/BeamEnergy       = 0.30 MeV
+s:So/PointSource/Position         = "0 0 0 mm"
+i:So/PointSource/NumberOfHistoriesInRun = 10000000

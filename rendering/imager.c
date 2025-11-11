@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <math.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -7,6 +8,7 @@
 
 #include "../src/read_write.h"
 #include "imager.h"
+#include "../src/hgmt_structs.h"
 
 #define THREADS 20
 #define EXP_LOOKUP_RES 1000
@@ -20,9 +22,6 @@ uint iterations;
 
 void add_grid(grid *cells, uint i, uint j, uint k) {
   cells->counts[i * Y_RES * Z_RES + j * Z_RES + k]++;
-}
-void add_graph(graph *cells, uint i, uint j, uint k, double val) {
-  cells->values[i * Y_RES * Z_RES + j * Z_RES + k] += val;
 }
 void graph_add(graph *cells, graph *add, double val) {
   for (int i = 0; i < RES; i++)
@@ -104,6 +103,17 @@ double fastexp(double x) {
   double weight = pos - (int)pos;
   return weight * exp_lookup[top] + (1 - weight) * exp_lookup[bottom];
 }
+/*double fastexp(double x) {
+  if (x <= min_exponent) return 0.0;
+  double span = -min_exponent; // positive
+  double pos  = (x - min_exponent) * (EXP_LOOKUP_RES - 1) / span; // [0..N-1]
+  if (pos <= 0.0) return exp_lookup[0];
+  if (pos >= (double)(EXP_LOOKUP_RES - 1)) return exp_lookup[EXP_LOOKUP_RES - 1];
+  int i = (int)pos;
+  double frac = pos - i;
+  return (1.0 - frac) * exp_lookup[i] + frac * exp_lookup[i + 1];
+}*/
+
 void normalize(graph *cells) {
   double total = 0;
   for (int i = 0; i < RES; i++)
@@ -178,10 +188,10 @@ int main(int argc, char **argv) {
     exit(1);
   }
   iterations = strtoul(args[2], NULL, 10);
-
+  printf("here");
   lor_file = fopen(args[0], "rb");
   char *filename;
-  asprintf(&filename, "%simage.voxels", args[1]);
+  asprintf(&filename, "%simage_point_vac_layer1.voxels", args[1]);
   output = fopen(filename, "wb");
   free(filename);
   grid cells = {0};
@@ -213,6 +223,14 @@ int main(int argc, char **argv) {
     num_lors++;
   }
   generate_image(&cells, &voxels);
+
+  /*if (num_comps == 0) {
+    fprintf(stderr, "No in-bounds LORs found in this LOR file.\n");
+    fprintf(stderr, "Image cannot be reconstructed from empty layer subset.\n");
+    fclose(lor_file);
+    fclose(output);
+    return 0;
+   } */
 
   printf("Initializing threads...\n");
   thread_data data[THREADS];

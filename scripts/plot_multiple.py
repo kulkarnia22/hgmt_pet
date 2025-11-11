@@ -39,15 +39,15 @@ def plot_histogram(doubles, key, xmax):
 
 # replace 'file.bin' with your binary file
 if len(sys.argv) != 6:
-    print(str(len(sys.argv)) + "parameters, expected 4, usage:")
     print(
-        "python3 plot_histogram [data_loc] [x_axis_label] [output_location] [x_axis_max] [y_axis_max]"
+        "Usage: python3 plot_histogram [data_loc] [x_axis_label] [output_location] [x_axis_max] [y_axis_max]"
     )
     sys.exit()
 doubles = read_labeled_doubles_from_binary_file(sys.argv[1], 2)
 top_items = heapq.nlargest(10, doubles.keys(), key=lambda k: len(doubles[k]))
-plt.xlabel(sys.argv[2])
-plt.ylabel("Frequency")
+plt.xlabel(sys.argv[2], fontsize=14)
+plt.ylabel("Fraction of Each LOR Configuration", fontsize = 14)
+plt.title("Distribution of Impact Parameters Across Different LORs", fontsize = 14)
 plt.xlim(0, float(sys.argv[4]))
 plt.ylim(0, float(sys.argv[5]))
 current_date = dt.datetime.now().strftime("%Y-%m-%d")

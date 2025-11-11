@@ -2,10 +2,15 @@
 #define hgmt_lor_creator_h
 
 #include "linear_algebra.h"
+#include "pore_geometry.h"
 #include <stdbool.h>
 #include <stdio.h>
 
-#define COLS 105
+extern int count1;
+
+#define COLS 50 //105
+#define RANGE_COLS 80
+#define KAPTON_RHO_G_CM3 1.42
 #define SPD_LGHT 29.9792458 // cm/ns
 #define REST_ENERGY 511.0   // KeV
 #define LONG_UNC 0.4        // cm
@@ -17,6 +22,7 @@
 #define DIFFUSION_VARIANCE 0.00022
 #define E_MAX 520.0
 #define E_MIN 0.0
+#define ME_C2_KEV 510.99895  // electron rest energy (keV)
 typedef unsigned int uint;
 
 #define LONG_VAR (LONG_UNC * LONG_UNC)
@@ -28,6 +34,8 @@ static const double detector_positions[12] = {
 typedef struct event_ {
   double tof;
   double energy;
+  double parent_gamma_energy;
+  vec3d parent_gamma_dir;
   vec3d position;
   vec3d direction;
   int detector_id;
@@ -72,6 +80,9 @@ typedef struct _annihilation {
 // debug information
 hit event_to_hit(event *single_event);
 bool is_detected(event *single_event, double eff_by_energy[COLS]);
+bool is_detected_geom(event *single_event);
+bool plane_crossing(event *single_event);
+bool plane_crossingv2(event *single_event);
 int get_detector(vec3d position);
 void free_annihilation(annihilation *annihilation_pointer);
 #endif
