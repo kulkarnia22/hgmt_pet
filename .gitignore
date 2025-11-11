@@ -1,5 +1,6 @@
 data/*
 *.o
+*.txt
 hgmt_lor_creator
 neural_network/chooser.pt
 neural_network/training_data
