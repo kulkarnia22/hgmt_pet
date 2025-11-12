@@ -326,5 +326,28 @@ double pg_kapton_range_mm(double E_keV)
   return y0 + t*(y1 - y0);
 }
 
+double pg_kapton_energy_keV(double R_mm)
+{
+  if (!g_range_E_keV || !g_range_R_mm || g_range_N < 2) return 0.0;
+
+  // Clamp to bounds
+  if (R_mm <= g_range_R_mm[0])              return g_range_E_keV[0];
+  if (R_mm >= g_range_R_mm[g_range_N - 1])  return g_range_E_keV[g_range_N - 1];
+
+  // --- binary search on range array ---
+  size_t lo = 0, hi = g_range_N - 1;
+  while (hi - lo > 1) {
+    size_t mid = lo + (hi - lo) / 2;
+    if (R_mm < g_range_R_mm[mid]) hi = mid;
+    else                          lo = mid;
+  }
+
+  // --- linear interpolation between (R_mm[lo], R_mm[hi]) ---
+  double x0 = g_range_R_mm[lo],  x1 = g_range_R_mm[hi];
+  double y0 = g_range_E_keV[lo], y1 = g_range_E_keV[hi];
+  double t  = (R_mm - x0) / (x1 - x0);
+  return y0 + t * (y1 - y0);
+}
+
 
 

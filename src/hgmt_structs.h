@@ -22,6 +22,7 @@ extern int count1;
 #define DIFFUSION_VARIANCE 0.00022
 #define E_MAX 520.0
 #define E_MIN 0.0
+#define PI 3.141592653589793
 #define ME_C2_KEV 510.99895  // electron rest energy (keV)
 typedef unsigned int uint;
 
@@ -84,5 +85,7 @@ bool is_detected_geom(event *single_event);
 bool plane_crossing(event *single_event);
 bool plane_crossingv2(event *single_event);
 int get_detector(vec3d position);
+int pores_crossed(event *single_event);
+double min_energy(event *single_event, int num_crosses);
 void free_annihilation(annihilation *annihilation_pointer);
 #endif

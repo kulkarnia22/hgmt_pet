@@ -68,6 +68,7 @@ FILE *debug_test;
 FILE *first_scatter_ranges;
 FILE *second_scatter_ranges;
 FILE *third_scatter_ranges;
+FILE *pores_crossed_first_hit;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -181,6 +182,16 @@ lor create_lor(primitive_lor *prim_lor) {
 int debug_path(photon_path *path, debug_context context) {
   if (path->num_events == 0)
     return 0;
+
+  if (path->num_hits != 0){
+    //here I will do all the work for counting # of pore crossings
+    hit *first_hit = path->hits[0];
+    event *single_event = first_hit->source;
+    int num_pores_crossed = pores_crossed(single_event);
+    
+    fwrite(&num_pores_crossed, sizeof(int), 1, pores_crossed_first_hit);
+  }
+
   // getting all the important statistics
   if (debug_options[1]){
     if(path->num_events >= 1){
@@ -547,6 +558,12 @@ int main(int argc, char **argv) {
   // opens up a .lor file to output each LOR into
   // can change HGMTDerenzo.lor to HGMTPoint.lor and vice versa
 
+  
+  //opening up file for pores crossed
+  char *pores_crossed_loc;
+  asprintf(&pores_crossed_loc, "%snum_pores_crossed.data", args[2]);
+  pores_crossed_first_hit = fopen(pores_crossed_loc, "wb");
+  free(pores_crossed_loc);
 
   //opens scatter ranges files
   char *first_ranges_loc;
@@ -743,6 +760,9 @@ int main(int argc, char **argv) {
   }
   if(third_scatter_ranges != NULL){
     fclose(third_scatter_ranges);
+  }
+  if(pores_crossed_first_hit != NULL){
+    fclose(pores_crossed_first_hit);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

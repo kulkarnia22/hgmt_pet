@@ -51,38 +51,41 @@ bool is_detected(event *single_event, double eff_by_energy[COLS]) {
 
 static inline double um_to_mm(double u){ return u * 1e-3; }
 
+static inline double wrap_pi(double a) {
+    a = fmod(a + PI, 2.0*PI);
+    if (a < 0) a += 2.0*PI;
+    return a - PI;  // in (-π, π]
+}
+
 bool plane_crossingv2(event *single_event){
     vec3d scatter_pos = vec_scale(single_event->position, 10);
     vec3d u = vec_norm(single_event->direction);
     double R_scatter = radial_dist(scatter_pos);
     double phi_scatter = atan2(scatter_pos.y, scatter_pos.x);
     double tau = um_to_mm(TAU);
-    //printf("change");
     double alpha = um_to_mm(ALPHA);
     double i = pg_nearest_int((R_scatter*phi_scatter)/(tau + alpha));//index of nearest pore
 
     //now I need to see if I am moving away from or towards this pore
-    double phi_pore = i*(tau + alpha)/R_scatter;
+    double phi_pore = wrap_pi(i*(tau + alpha)/R_scatter);
     //need to check if I am inside pore plane
-    if(R_scatter*fabs(phi_scatter - phi_pore) < alpha/2){
+    if(R_scatter*fabs(wrap_pi(phi_scatter - phi_pore)) < alpha/2){
         return 0;
     }
 
-    double phi_diff = phi_pore - phi_scatter;
+    double phi_diff = wrap_pi(phi_pore - phi_scatter);
     vec3d ephi = three_vec(-sin(phi_scatter), cos(phi_scatter), 0);
-    //vec3d er = three_vec(cos(phi_scatter), sin(phi_scatter), 0);
-    //vec3d ez = three_vec(0, 0, 1);
-
     double uphi = vec_dot(u, ephi);
-
+    
+    //adjusting pore to look at based on direction of scatter
     if(uphi * phi_diff < 0){
         if(phi_pore > phi_scatter){
             i -= 1;
-            phi_pore = i*(tau + alpha)/R_scatter;
+            phi_pore = wrap_pi(i*(tau + alpha)/R_scatter);
         }
         else{
             i += 1;
-            phi_pore = i*(tau + alpha)/R_scatter;
+            phi_pore = wrap_pi(i*(tau + alpha)/R_scatter);
         }
     }
     //now we check if the electron reaches a pore
@@ -93,7 +96,19 @@ bool plane_crossingv2(event *single_event){
     vec3d final_pos = vec_add(scatter_pos, vec_scale(u, s_max_mm));
     double r1 = R_scatter;
     double r2 = radial_dist(final_pos);
-    double phi1_mm = r1*phi_scatter;
+    double final_phi = atan2(final_pos.y, final_pos.x);
+    phi_diff = wrap_pi(final_phi - phi_scatter);
+    double pore_scatter_diff = wrap_pi(phi_pore - phi_scatter);
+    double r = (r1 + r2)/2;
+    double alpha_diff = wrap_pi(alpha/(2*r));
+    double angle_to_pore = wrap_pi(pore_scatter_diff - alpha_diff);
+    if (fabs(r*phi_diff) > fabs(r*angle_to_pore)){
+        return 1;
+    }
+    return 0;
+
+    //commented out bottom due to problematic edge case that I try to fix above
+    /*double phi1_mm = r1*phi_scatter;
     double phi2_mm = r2*atan2(final_pos.y,final_pos.x); 
     double phi_travelled = phi2_mm - phi1_mm;
     if (phi_pore > phi_scatter){
@@ -109,7 +124,121 @@ bool plane_crossingv2(event *single_event){
             return 1;
         }
     }
-    return 0;
+    return 0;*/
+}
+
+int pores_crossed(event *first_hit){
+    /*Here I will do the analysis on the path of our first hits
+    This will tell me how many pores are crossed by scatters resulting in a hit.
+    In another function that I will likely write after this, I will get the 
+    energy of my electron at the entrance of each pore by playing with my
+    kapton range table. 
+
+    Importantly, this function will rerun much of the logic in plan_crosingv2.
+    It is really silly how much I am just repeating. Ideally I just do everything in 
+    plane_crossingv2 but to interpret that I would have to change the structure of the
+    post processing flow too much.
+    */
+
+    vec3d hit_pos = vec_scale(first_hit->position, 10);
+    vec3d u = vec_norm(first_hit->direction);
+    double hit_R = sqrt(hit_pos.x*hit_pos.x + hit_pos.y*hit_pos.y);
+    double hit_phi = atan2(hit_pos.y, hit_pos.x);
+    double tau = um_to_mm(TAU);
+    double alpha = um_to_mm(ALPHA);
+    double i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
+
+    double phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+
+    double phi_diff = wrap_pi(phi_pore - hit_phi);
+    vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
+    double uphi = vec_dot(u, ephi);
+    
+    //adjusting pore to look at based on direction of scatter
+    if(uphi * phi_diff < 0){
+        if(phi_pore > hit_phi){
+            i -= 1;
+            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+        }
+        else{
+            i += 1;
+            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+        }
+    }
+
+    double scatter_energy = first_hit->energy;
+    double s_max_mm = pg_kapton_range_mm(scatter_energy);
+    vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
+    double r1 = hit_R;
+    double r2 = radial_dist(final_pos);
+    double final_phi = atan2(final_pos.y, final_pos.x);
+
+    //once I'm in mm I'm good
+    //but because of angle trouble I need to stay in phi coords until the very end
+    //technically electron won't lose energy in the pore
+    double r = (r1 + r2)/2;
+    phi_diff = wrap_pi(phi_pore - hit_phi);
+    double phi_alpha_diff = alpha/(2*r);
+    double new_phi = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
+    double new_phi_diff = wrap_pi(final_phi - new_phi);
+    int num_pores_crossed = 1 + floor(fabs(r*new_phi_diff/(alpha + tau)));
+    return num_pores_crossed;
+
+}
+
+double min_energy(event *first_hit, int num_crosses){
+    /*for this I just need to start with the energy of my scatter
+    and then see how much energy it loses by the time it reaches the first pore.
+    After that, for each new pore it crosses, I just need to decrease energy by
+    tau mm equivalent.*/
+    vec3d hit_pos = vec_scale(first_hit->position, 10);
+    vec3d u = vec_norm(first_hit->direction);
+    double hit_R = sqrt(hit_pos.x*hit_pos.x + hit_pos.y*hit_pos.y);
+    double hit_phi = atan2(hit_pos.y, hit_pos.x);
+    double tau = um_to_mm(TAU);
+    double alpha = um_to_mm(ALPHA);
+    double i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
+
+    double phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+
+    double phi_diff = wrap_pi(phi_pore - hit_phi);
+    vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
+    double uphi = vec_dot(u, ephi);
+    
+    //adjusting pore to look at based on direction of scatter
+    if(uphi * phi_diff < 0){
+        if(phi_pore > hit_phi){
+            i -= 1;
+            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+        }
+        else{
+            i += 1;
+            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+        }
+    }
+
+    double scatter_energy = first_hit->energy;
+    double s_max_mm = pg_kapton_range_mm(scatter_energy);
+    vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
+    double r1 = hit_R;
+    double r2 = radial_dist(final_pos);
+    double final_phi = atan2(final_pos.y, final_pos.x);
+
+    //now I need to find distance to first pore
+    double r = (r1 + r2)/2;
+    phi_diff = wrap_pi(phi_pore - hit_phi);
+    double phi_alpha_diff = alpha/(2*r);
+    double new_phi = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
+    //I will probably need to go through this again and make some changes
+    //But we'll work with this for now. Hopefully I can make everything correct
+    //and robust over break.
+    double dist_to_first_pore = r*wrap_pi(new_phi  - hit_phi); //we assume scatter makes it to pore since we only consider first hits
+    double min_energy = scatter_energy;
+
+
+
+
+    
 }
 
 bool plane_crossing(event *single_event){

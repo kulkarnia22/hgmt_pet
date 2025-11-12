@@ -123,5 +123,6 @@ void   pg_set_kapton_range_table(size_t n,
                                  const double* E_keV,   // strictly increasing
                                  const double* R_mm);   // mm
 double pg_kapton_range_mm(double E_keV);                // linear interp; 0 if unset
+double pg_kapton_energy_keV(double R_mm);
 
 #endif

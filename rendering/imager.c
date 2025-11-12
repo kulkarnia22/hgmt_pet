@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
   printf("here");
   lor_file = fopen(args[0], "rb");
   char *filename;
-  asprintf(&filename, "%simage_point_vac_layer1.voxels", args[1]);
+  asprintf(&filename, "%simage_point_vac.voxels", args[1]);
   output = fopen(filename, "wb");
   free(filename);
   grid cells = {0};
