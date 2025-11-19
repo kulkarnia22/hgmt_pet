@@ -228,17 +228,20 @@ double min_energy(event *first_hit, int num_crosses){
     double r = (r1 + r2)/2;
     phi_diff = wrap_pi(phi_pore - hit_phi);
     double phi_alpha_diff = alpha/(2*r);
-    double new_phi = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
-    //I will probably need to go through this again and make some changes
-    //But we'll work with this for now. Hopefully I can make everything correct
-    //and robust over break.
-    double dist_to_first_pore = r*wrap_pi(new_phi  - hit_phi); //we assume scatter makes it to pore since we only consider first hits
-    double min_energy = scatter_energy;
-
-
-
-
-    
+    double phi_prime = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
+    //first need to find change of phi to first pore
+    double t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
+    double new_range = s_max_mm - t;
+    double min_energy = scatter_energy - pg_kapton_energy_keV(new_range);
+    int num_pores = num_crosses - 1;
+    double phi_per_pore = tau/r;
+    for (int i = 0; i < num_pores; i ++){
+        phi_prime += phi_per_pore;
+        t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
+        new_range -= t;
+        min_energy -= pg_kapton_energy_keV(new_range);
+    }
+    return min_energy;    
 }
 
 bool plane_crossing(event *single_event){

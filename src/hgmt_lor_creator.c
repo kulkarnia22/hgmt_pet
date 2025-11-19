@@ -69,6 +69,7 @@ FILE *first_scatter_ranges;
 FILE *second_scatter_ranges;
 FILE *third_scatter_ranges;
 FILE *pores_crossed_first_hit;
+FILE *min_energy_pores;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -188,8 +189,11 @@ int debug_path(photon_path *path, debug_context context) {
     hit *first_hit = path->hits[0];
     event *single_event = first_hit->source;
     int num_pores_crossed = pores_crossed(single_event);
+    double energy = min_energy(single_event, num_pores_crossed);
     
     fwrite(&num_pores_crossed, sizeof(int), 1, pores_crossed_first_hit);
+    fwrite(&num_pores_crossed, sizeof(int), 1, min_energy_pores);
+    fwrite(&energy, sizeof(double), 1, min_energy_pores); 
   }
 
   // getting all the important statistics
@@ -565,6 +569,12 @@ int main(int argc, char **argv) {
   pores_crossed_first_hit = fopen(pores_crossed_loc, "wb");
   free(pores_crossed_loc);
 
+  //open up file for min energy
+  char *min_energy_loc;
+  asprintf(&min_energy_loc, "%smin_energy.data", args[2]);
+  min_energy_pores = fopen(min_energy_loc, "wb");
+  free(min_energy_loc);
+
   //opens scatter ranges files
   char *first_ranges_loc;
   asprintf(&first_ranges_loc, "%sfirst_scatter_ranges.data", args[2]);
@@ -763,6 +773,9 @@ int main(int argc, char **argv) {
   }
   if(pores_crossed_first_hit != NULL){
     fclose(pores_crossed_first_hit);
+  }
+  if(min_energy_pores != NULL){
+    fclose(min_energy_pores);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

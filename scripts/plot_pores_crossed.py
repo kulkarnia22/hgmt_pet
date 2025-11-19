@@ -10,6 +10,7 @@ max_val = data.max()
 # --- histogram with one bin per integer value ---
 bins = np.arange(data.min(), data.max() + 2) - 0.5
 counts, edges = np.histogram(data, bins=bins)
+counts = counts/1000000
 centers = (edges[:-1] + edges[1:]) / 2
 
 print(f"Max value: {max_val}")
@@ -36,7 +37,7 @@ fig, ax = plt.subplots()
 
 ax.plot(centers, counts, 'o', markersize=6, color='red')
 ax.set_xlabel("Number of pores crossed")
-ax.set_ylabel("Count")
+ax.set_ylabel(r"$\frac{counts}{annihilations}$")
 ax.set_title("Distribution of pores crossed by first hits")
 
 # --- inward ticks on all sides ---
