@@ -222,7 +222,7 @@ double min_energy(event *first_hit, int num_crosses){
     vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
     double r1 = hit_R;
     double r2 = radial_dist(final_pos);
-    double final_phi = atan2(final_pos.y, final_pos.x);
+    //double final_phi = atan2(final_pos.y, final_pos.x);
 
     //now I need to find distance to first pore
     double r = (r1 + r2)/2;

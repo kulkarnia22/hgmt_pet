@@ -21,6 +21,9 @@ double ranges_mm[RANGE_COLS];
 bool writing_to_lor = true;
 uint vis_events = 0;
 uint counter = 0;
+uint hit_first_counter = 0;
+uint hit_second_counter = 0;
+uint hit_third_counter = 0;
 // global variables
 #define NUM_CUTS 6
 #define NUM_DEBUG_OPTIONS 5
@@ -70,6 +73,7 @@ FILE *second_scatter_ranges;
 FILE *third_scatter_ranges;
 FILE *pores_crossed_first_hit;
 FILE *min_energy_pores;
+FILE *scatter_layers;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -246,6 +250,9 @@ int debug_annihilation(debug_context context) {
   annihilation *annihil = context.annihil;
   num_scatters += annihil->num_events;
   num_hits += annihil->num_hits;
+  for(int i = 0; i < annihil->num_events; i ++){
+    print_double(annihil->events[i].detector_id, scatter_layers);
+  }
   if (debug_options[0])
     for (int j = 0; j < annihil->num_events; j++)
       print_double(annihil->events[j].detector_id, debug[0]);
@@ -331,6 +338,32 @@ void *worker(void *arg) {
     split.num_hits2 = annihil.photon2.num_hits;
     split.hits1 = annihil.photon1.hits;
     split.hits2 = annihil.photon2.hits;
+    for (int i = 0; i < split.num_hits1; i ++){
+        hit *current_hit = split.hits1[i];
+        int scatter_num = current_hit->source->number;
+        if (scatter_num == 0){
+            hit_first_counter ++;
+        } 
+        else if(scatter_num == 1){
+            hit_second_counter ++;
+        }
+        else if(scatter_num == 2){
+            hit_third_counter ++;
+        }
+    }
+    for (int i = 0; i < split.num_hits2; i ++){
+        hit *current_hit = split.hits2[i];
+        int scatter_num = current_hit->source->number;
+        if (scatter_num == 0){
+            hit_first_counter ++;
+        } 
+        else if(scatter_num == 1){
+            hit_second_counter ++;
+        }
+        else if(scatter_num == 2){
+            hit_third_counter ++;
+        }
+    }
     /*if (annihil.photon1.num_events > 0 &&
     annihil.photon1.events != NULL &&
     annihil.photon1.events[0] != NULL &&
@@ -575,6 +608,12 @@ int main(int argc, char **argv) {
   min_energy_pores = fopen(min_energy_loc, "wb");
   free(min_energy_loc);
 
+  //open file for scatter layer counts
+  char *scatter_layer_loc;
+  asprintf(&scatter_layer_loc, "%sscatter_layers.data", args[2]);
+  scatter_layers = fopen(scatter_layer_loc, "wb");
+  free(scatter_layer_loc);
+
   //opens scatter ranges files
   char *first_ranges_loc;
   asprintf(&first_ranges_loc, "%sfirst_scatter_ranges.data", args[2]);
@@ -690,9 +729,12 @@ int main(int argc, char **argv) {
   }
   printf("total annihilations: %u\n", num_annihilations);
   printf("total scatters: %u\n", num_scatters);
-  printf("total hits: %u\n\n", num_hits);
+  printf("total hits: %u\n", num_hits);
   printf("total first scatters: %u\n", first_scatters);
   printf("total first hits: %u\n", first_hits);
+  printf("first scatter hits: %u\n", hit_first_counter);
+  printf("second scatter hits: %u\n", hit_second_counter);
+  printf("third scatter counter: %u\n", hit_third_counter);
   printf(
       "(DUAL)CUT 'N': 'num' 'percent passing' 'cumulative percent passing'\n");
   for (int i = 1; i < NUM_CUTS; i++)
@@ -776,6 +818,9 @@ int main(int argc, char **argv) {
   }
   if(min_energy_pores != NULL){
     fclose(min_energy_pores);
+  }
+  if(scatter_layers != NULL){
+    fclose(scatter_layers);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

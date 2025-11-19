@@ -1,21 +1,71 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+from matplotlib.ticker import AutoMinorLocator
 
-# --- read binary integers ---
-data = np.fromfile("data/num_pores_crossed.data", dtype=np.int32)
-max_val = data.max()
-#data = data[data > 1]
+# ------------------------------
+# Parameters
+# ------------------------------
 
-# --- histogram with one bin per integer value ---
-bins = np.arange(data.min(), data.max() + 2) - 0.5
-counts, edges = np.histogram(data, bins=bins)
-counts = counts/1000000
-centers = (edges[:-1] + edges[1:]) / 2
+filename = "data/num_pores_crossed.data"
+normalize_const = 19869792      # you choose this
 
-print(f"Max value: {max_val}")
+max_pores_in_file = 13        # data may go up to 13
+max_k_to_plot = 6             # we only care about >=1..>=6 pores
 
-# --- APS-style defaults ---
+# ------------------------------
+# 1. Load binary integers
+# ------------------------------
+
+pores = np.fromfile(filename, dtype=np.int32)
+print(f"Loaded {len(pores)} entries")
+
+if len(pores) == 0:
+    raise ValueError("File appears empty or incorrect format.")
+
+# Optional: discard 0-pore events if you don't consider them "in detector"
+pores = pores[pores > 0]
+print(f"Kept {len(pores)} events with >=1 pore crossed")
+
+# ------------------------------
+# 2. Exact counts by pore number
+#    counts_exact[k] = # hits that crossed exactly k pores
+# ------------------------------
+
+max_pores = min(pores.max(), max_pores_in_file)
+counts_exact = np.bincount(pores, minlength=max_pores + 1)
+# counts_exact[0] is for value 0, which we discarded; ignore index 0
+
+print("Exact counts by pores crossed (k=1..max_pores):")
+for k in range(1, max_pores + 1):
+    print(f"k={k}: {counts_exact[k]}")
+
+# ------------------------------
+# 3. Cumulative counts: >=k pores
+#    counts_at_least[k] = sum_{j>=k} counts_exact[j]
+# ------------------------------
+
+# Make a copy up to max_pores and compute reverse cumsum
+exact = counts_exact[:max_pores + 1]  # indices 0..max_pores
+cumulative_from_end = exact[::-1].cumsum()[::-1]
+# cumulative_from_end[k] = sum_{j>=k} exact[j]
+
+counts_at_least = cumulative_from_end
+
+print("\nCounts for 'at least k pores crossed':")
+for k in range(1, max_k_to_plot + 1):
+    print(f">= {k}: {counts_at_least[k]}")
+
+# ------------------------------
+# 4. Prepare data for plotting (k = 1..6)
+# ------------------------------
+
+ks = np.arange(1, max_k_to_plot + 1)
+y_vals = counts_at_least[1:max_k_to_plot + 1] / normalize_const
+
+# ------------------------------
+# 5. Plot: point-style, APS-ish formatting
+# ------------------------------
+
 plt.rcParams.update({
     "figure.figsize": (8, 5),
     "axes.linewidth": 1.5,
@@ -32,29 +82,19 @@ plt.rcParams.update({
     "ytick.minor.size": 3,
 })
 
-# --- plot ---
 fig, ax = plt.subplots()
 
-ax.plot(centers, counts, 'o', markersize=6, color='red')
-ax.set_xlabel("Number of pores crossed")
-ax.set_ylabel(r"$\frac{counts}{annihilations}$")
-ax.set_title("Distribution of pores crossed by first hits")
+ax.plot(ks, y_vals, "o", markersize=7, color="black")
+ax.set_xlabel("Minimum Number of Pores Crossed")
+ax.set_ylabel(r"$\frac{hits}{scatter}$")
+ax.set_title("Hits Per Scatter vs The Minimum Number of Pores Crossed")
 
-# --- inward ticks on all sides ---
-ax.tick_params(
-    which='both',
-    direction='in',     # all ticks go in
-    top=True, right=True
-)
-
-# --- tick locators ---
-ax.xaxis.set_major_locator(MultipleLocator(1))           # one tick per integer
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))          # 2 minor ticks per interval
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
-
 plt.tight_layout()
-plt.savefig("plots/pores_crossed_dist.png", dpi=300)
+plt.savefig("plots/num_pores_crossed_cumulative.png", dpi=300)
 plt.show()
+
 
 
