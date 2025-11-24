@@ -82,7 +82,7 @@ layers_x = np.arange(1, num_layers + 1)
 ax.plot(layers_x, norm_counts, "o", markersize=7, color="black")
 
 ax.set_xlabel("Layer number")
-ax.set_ylabel("Normalized counts")
+ax.set_ylabel("Fraction of Total Scatters Per Layer")
 ax.set_title("Scatter distribution by layer")
 
 # Minor ticks

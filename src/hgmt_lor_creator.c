@@ -24,6 +24,11 @@ uint counter = 0;
 uint hit_first_counter = 0;
 uint hit_second_counter = 0;
 uint hit_third_counter = 0;
+uint chain_count = 0;
+uint lor_count = 0;
+uint first_scatter_count = 0;
+uint second_scatter_count = 0;
+uint third_scatter_count = 0;
 // global variables
 #define NUM_CUTS 6
 #define NUM_DEBUG_OPTIONS 5
@@ -189,6 +194,7 @@ int debug_path(photon_path *path, debug_context context) {
     return 0;
 
   if (path->num_hits != 0){
+    chain_count ++;
     //here I will do all the work for counting # of pore crossings
     hit *first_hit = path->hits[0];
     event *single_event = first_hit->source;
@@ -203,14 +209,17 @@ int debug_path(photon_path *path, debug_context context) {
   // getting all the important statistics
   if (debug_options[1]){
     if(path->num_events >= 1){
+        first_scatter_count ++;
         double range1 = pg_kapton_range_mm(path->events[0]->energy);
         fwrite(&range1, sizeof(double), 1, first_scatter_ranges);
     }
     if(path->num_events >= 2){
+        second_scatter_count ++;
         double range2 = pg_kapton_range_mm(path->events[1]->energy);
         fwrite(&range2, sizeof(double), 1, second_scatter_ranges);
     }
     if(path->num_events >= 3){
+        third_scatter_count ++;
         double range3 = pg_kapton_range_mm(path->events[2]->energy);
         fwrite(&range3, sizeof(double), 1, third_scatter_ranges);
     }
@@ -380,6 +389,7 @@ void *worker(void *arg) {
     primitive_lor prim_lor;
     lor new_lor;
     if (split.num_hits1 >= 1 && split.num_hits2 >= 1) { 
+      lor_count ++;
       prim_lor = create_prim_lor(split);
       new_lor = create_lor(&prim_lor);
       context.prim_lor = &prim_lor;
@@ -732,9 +742,13 @@ int main(int argc, char **argv) {
   printf("total hits: %u\n", num_hits);
   printf("total first scatters: %u\n", first_scatters);
   printf("total first hits: %u\n", first_hits);
+  printf("total chains: %u\n", chain_count);
+  printf("total number of lors: %u\n", lor_count);
   printf("first scatter hits: %u\n", hit_first_counter);
-  printf("second scatter hits: %u\n", hit_second_counter);
-  printf("third scatter counter: %u\n", hit_third_counter);
+  printf("first scatter count: %u\n", first_scatter_count);
+  printf("hits/first scatter: %d\n", hit_first_counter/first_scatter_count);
+  printf("hits/second scatter: %d\n", hit_second_counter/second_scatter_count);
+  printf("hits/third scatters: %d\n", hit_third_counter/third_scatter_count);
   printf(
       "(DUAL)CUT 'N': 'num' 'percent passing' 'cumulative percent passing'\n");
   for (int i = 1; i < NUM_CUTS; i++)
