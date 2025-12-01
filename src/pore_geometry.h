@@ -18,7 +18,7 @@
 #define ALPHA 5 //microns
 #define BETA 50 //microns
 #define GAMMA 1000 //microns
-#define TAU 127 //microns
+#define TAU 51 //microns
 
 // tolerances for AXIS_SLAB / axis_slab
 #define EPS_U 1e-12      // treat |u| < EPS_U as parallel (units: same as u, typically mm per t)

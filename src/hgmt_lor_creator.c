@@ -746,9 +746,10 @@ int main(int argc, char **argv) {
   printf("total number of lors: %u\n", lor_count);
   printf("first scatter hits: %u\n", hit_first_counter);
   printf("first scatter count: %u\n", first_scatter_count);
-  printf("hits/first scatter: %d\n", hit_first_counter/first_scatter_count);
-  printf("hits/second scatter: %d\n", hit_second_counter/second_scatter_count);
-  printf("hits/third scatters: %d\n", hit_third_counter/third_scatter_count);
+  printf("second scatter hits: %u\n", hit_second_counter);
+  printf("second scatter counts: %u\n", second_scatter_count);
+  printf("third scatter hits: %u\n", hit_third_counter);
+  printf("third scatter counts: %u\n", third_scatter_count); 
   printf(
       "(DUAL)CUT 'N': 'num' 'percent passing' 'cumulative percent passing'\n");
   for (int i = 1; i < NUM_CUTS; i++)

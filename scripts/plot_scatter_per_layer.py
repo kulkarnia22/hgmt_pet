@@ -1,48 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
-
-# ------------------------------
-# Parameters
-# ------------------------------
+from matplotlib.ticker import MultipleLocator
 
 filename = "data/scatter_layers.data"
 normalize_const = 19869792    # <-- total number of scatters
 
-# ------------------------------
-# 1. Load binary doubles
-# ------------------------------
-
 layers_raw = np.fromfile(filename, dtype=np.float64)
 print("length check = " + str(len(layers_raw)) + "\n")
 print(f"Loaded {len(layers_raw)} entries before filtering")
-
-# ------------------------------
-# 2. Discard -1 (not in detector)
-# ------------------------------
 
 valid_mask = layers_raw >= 0
 layers_valid = layers_raw[valid_mask]
 
 print(f"Kept {len(layers_valid)} valid entries, discarded {len(layers_raw) - len(layers_valid)}")
 
-# ------------------------------
-# 3. Convert layer values:
-#    raw_value + 1 → layer index
-# ------------------------------
-
-# Example: 0.0→1, 1.0→2, ..., 11.0→12
 layers = layers_valid.astype(int) + 1
-
-# Only keep 1–12
-"""final_mask = (layers >= 1) & (layers <= 12)
-layers = layers[final_mask]"""
-
-print(f"Final valid layer entries: {len(layers)}")
-
-# ------------------------------
-# 4. Count occurrences per layer
-# ------------------------------
 
 num_layers = 12
 counts = np.zeros(num_layers, dtype=int)
@@ -55,10 +28,6 @@ norm_counts = counts / normalize_const
 
 print("Counts per layer:", counts)
 print("Normalized:", norm_counts)
-
-# ------------------------------
-# 5. Make point-style plot
-# ------------------------------
 
 plt.rcParams.update({
     "figure.figsize": (8, 5),
@@ -78,6 +47,7 @@ plt.rcParams.update({
 
 fig, ax = plt.subplots()
 
+
 layers_x = np.arange(1, num_layers + 1)
 ax.plot(layers_x, norm_counts, "o", markersize=7, color="black")
 
@@ -85,8 +55,8 @@ ax.set_xlabel("Layer number")
 ax.set_ylabel("Fraction of Total Scatters Per Layer")
 ax.set_title("Scatter distribution by layer")
 
-# Minor ticks
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.xaxis.set_major_locator(MultipleLocator(1))
+ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
 plt.tight_layout()

@@ -3,9 +3,9 @@ from matplotlib.ticker import AutoMinorLocator
 
 thickness_mm = [2, 3, 4, 5]
 
-hit_first_scatter_eff = [0.058, 0.054, 0.049, 0.045]
-hit_second_scatter_eff = [0.038, 0.034, 0.030, 0.027]
-hit_third_scatter_eff = [0.023, 0.019, 0.016, 0.014]
+hit_first_scatter_eff = [0.51, 0.56, 0.61, 0.65]
+hit_second_scatter_eff = [0.33, 0.36, 0.41, 0.46]
+hit_third_scatter_eff = [0.18, 0.20, 0.24, 0.29]
 
 # APS-like styling
 plt.rcParams.update({
@@ -28,8 +28,8 @@ fig, ax = plt.subplots()
 
 # Point plot
 ax.plot(thickness_mm, hit_first_scatter_eff, "o-", color="red", markersize=7, linewidth=1.5)
-ax.plot(thickness_mm, hit_second_scatter_eff, "o-", color="green", markersize=7, linewidth=1.5)
-ax.plot(thickness_mm, hit_third_scatter_eff, "o-", color="blue", markersize=7, linewidth=1.5)
+ax.plot(thickness_mm, hit_second_scatter_eff, "^-", color="green", markersize=7, linewidth=1.5)
+ax.plot(thickness_mm, hit_third_scatter_eff, "s-", color="blue", markersize=7, linewidth=1.5)
 
 # Labels
 ax.set_xlabel(r"Thickness Tau (mils)", fontsize = 14)

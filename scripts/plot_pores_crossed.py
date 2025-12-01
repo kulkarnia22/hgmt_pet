@@ -7,7 +7,7 @@ from matplotlib.ticker import AutoMinorLocator
 # ------------------------------
 
 filename = "data/num_pores_crossed.data"
-normalize_const = 19869792      # you choose this
+normalize_const = 2000000      # you choose this
 
 max_pores_in_file = 13        # data may go up to 13
 max_k_to_plot = 6             # we only care about >=1..>=6 pores
@@ -86,8 +86,8 @@ fig, ax = plt.subplots()
 
 ax.plot(ks, y_vals, "o", markersize=7, color="black")
 ax.set_xlabel("Minimum Number of Pores Crossed")
-ax.set_ylabel(r"$\frac{hits}{scatter}$")
-ax.set_title("Hits Per Scatter vs The Minimum Number of Pores Crossed")
+ax.set_ylabel(r"$\frac{hits}{gamma}$")
+ax.set_title("Hits Per Gamma vs The Minimum Number of Pores Crossed")
 
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
