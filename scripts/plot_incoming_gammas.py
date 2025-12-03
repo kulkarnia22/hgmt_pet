@@ -47,42 +47,43 @@ bin_width = bin_edges[1] - bin_edges[0]
 fig, ax = plt.subplots(figsize=(8,6))
 eps = 1e-10
 #ax.errorbar(bin_centers, counts/10000000, np.sqrt(counts)/10000000, capsize = 2)
-ax.plot(bin_centers, np.log(counts/20000000 + eps), label = 'all first hits')
+ax.plot(bin_centers, counts/20000000 + eps, label = 'all first hits')
 #ax.errorbar(bin_centers, counts_first/10000000, np.sqrt(counts_first)/10000000, capsize = 2)
-ax.plot(bin_centers, np.log(counts_first/20000000 + eps), label = 'i = 1')
+ax.plot(bin_centers, counts_first/20000000 + eps, label = 'i = 1')
 #ax.errorbar(bin_centers, counts_first_firstid/10000000, np.sqrt(counts_first_firstid)/10000000, capsize = 2)
 #ax.plot(bin_centers, np.log(counts_first_firstid/10000000 + eps))
 #ax.errorbar(bin_centers, counts_first_secondid/10000000, np.sqrt(counts_first_secondid)/10000000, capsize = 2)
 #ax.plot(bin_centers, np.log(counts_first_secondid/10000000 + eps))
 #ax.errorbar(bin_centers, counts_first_thirdid/10000000, np.sqrt(counts_first_thirdid)/10000000, capsize = 2)
 #ax.plot(bin_centers, np.log(counts_first_thirdid/10000000 + eps))
-ax.plot(bin_centers, np.log(counts_second/20000000 + eps), label = 'i = 2')
-ax.plot(bin_centers, np.log(counts_third/20000000 + eps), label = 'i = 3')
-ax.plot(bin_centers, np.log(counts_fourth/20000000 + eps), label = 'i = 4')
-ax.plot(bin_centers, np.log(counts_fifth/20000000 + eps), label = 'i = 5')
-ax.plot(bin_centers, np.log(counts_sixth/20000000 + eps), label = 'i = 6')
+ax.plot(bin_centers, counts_second/20000000 + eps, label = 'i = 2')
+ax.plot(bin_centers, counts_third/20000000 + eps, label = 'i = 3')
+ax.plot(bin_centers, counts_fourth/20000000 + eps, label = 'i = 4')
+ax.plot(bin_centers, counts_fifth/20000000 + eps, label = 'i = 5')
+ax.plot(bin_centers, counts_sixth/20000000 + eps, label = 'i = 6')
 ax.set_xlabel("Energy (keV)", fontsize = 14)
-ax.set_ylabel(r"Log(Fraction of Incoming Photons($\frac{photons}{events}$))", fontsize = 14)
+ax.set_ylabel(r"Log(Fraction of Incoming Photons($\frac{photons}{all gammas}$))", fontsize = 14)
 ax.set_title(r"Energy Distribution of Photons Resulting in $PC^{i,1}_{N}$", fontsize = 14)
 # Inward ticks
 ax.tick_params(which='both', direction='in')
+ax.set_yscale("log")
 # Subticks on the x-axis
 plt.minorticks_on()  # turns on subticks
 plt.tick_params(axis='x', which='minor', bottom=True)  # show subticks
 
 # Make y-axis go to the top
-plt.ylim(-24, 0)  # add a bit of headroom (5%)
+#plt.ylim(-10, 0)  # add a bit of headroom (5%)
 #(np.log(counts/10000000 + eps)).max() * 1.05
 # Force ticks to span 0 → max
-yticks = np.linspace(-24, 0, 6)  # choose number of ticks
+#yticks = np.linspace(-10, 0, 6)  # choose number of ticks
 # Round each tick to 2 significant figures
 plt.xlim(0, 520)
 def round_sig(x, sig=2):
     return float(f"{x:.{sig}g}")
 
-ytick_labels = [round_sig(y, 2) for y in yticks]
+#ytick_labels = [round_sig(y, 2) for y in yticks]
 
-plt.yticks(yticks, ytick_labels)
+#plt.yticks(yticks, ytick_labels)
 #plt.legend()
 ax.legend(
     loc='upper center',

@@ -23,7 +23,9 @@ uint vis_events = 0;
 uint counter = 0;
 uint hit_first_counter = 0;
 uint hit_second_counter = 0;
+uint first_hit_second_scatter = 0;
 uint hit_third_counter = 0;
+uint first_hit_third_scatter = 0;
 uint chain_count = 0;
 uint lor_count = 0;
 uint first_scatter_count = 0;
@@ -78,7 +80,8 @@ FILE *second_scatter_ranges;
 FILE *third_scatter_ranges;
 FILE *pores_crossed_first_hit;
 FILE *min_energy_pores;
-FILE *scatter_layers;
+FILE *first_scatter_layers;
+FILE *first_scatter_detected_layers;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -212,6 +215,11 @@ int debug_path(photon_path *path, debug_context context) {
         first_scatter_count ++;
         double range1 = pg_kapton_range_mm(path->events[0]->energy);
         fwrite(&range1, sizeof(double), 1, first_scatter_ranges);
+        int layer = path->events[0]->detector_id;
+        fwrite(&layer, sizeof(int), 1, first_scatter_layers);
+        if(path->events[0]->detected){
+            fwrite(&layer, sizeof(int), 1, first_scatter_detected_layers);
+        }
     }
     if(path->num_events >= 2){
         second_scatter_count ++;
@@ -259,9 +267,6 @@ int debug_annihilation(debug_context context) {
   annihilation *annihil = context.annihil;
   num_scatters += annihil->num_events;
   num_hits += annihil->num_hits;
-  for(int i = 0; i < annihil->num_events; i ++){
-    print_double(annihil->events[i].detector_id, scatter_layers);
-  }
   if (debug_options[0])
     for (int j = 0; j < annihil->num_events; j++)
       print_double(annihil->events[j].detector_id, debug[0]);
@@ -355,9 +360,15 @@ void *worker(void *arg) {
         } 
         else if(scatter_num == 1){
             hit_second_counter ++;
+            if(i == 0){
+                first_hit_second_scatter ++;
+            }
         }
         else if(scatter_num == 2){
             hit_third_counter ++;
+            if(i == 0){
+                first_hit_third_scatter ++;
+            }
         }
     }
     for (int i = 0; i < split.num_hits2; i ++){
@@ -619,10 +630,15 @@ int main(int argc, char **argv) {
   free(min_energy_loc);
 
   //open file for scatter layer counts
-  char *scatter_layer_loc;
-  asprintf(&scatter_layer_loc, "%sscatter_layers.data", args[2]);
-  scatter_layers = fopen(scatter_layer_loc, "wb");
-  free(scatter_layer_loc);
+  char *first_scatter_layer_loc;
+  asprintf(&first_scatter_layer_loc, "%sfirst_scatter_layers.data", args[2]);
+  first_scatter_layers = fopen(first_scatter_layer_loc, "wb");
+  free(first_scatter_layer_loc);
+
+  char *first_scatter_detected_layer_loc;
+  asprintf(&first_scatter_detected_layer_loc, "%sfirst_scatter_detected_layers.data", args[2]);
+  first_scatter_detected_layers = fopen(first_scatter_detected_layer_loc, "wb");
+  free(first_scatter_detected_layer_loc);
 
   //opens scatter ranges files
   char *first_ranges_loc;
@@ -747,8 +763,10 @@ int main(int argc, char **argv) {
   printf("first scatter hits: %u\n", hit_first_counter);
   printf("first scatter count: %u\n", first_scatter_count);
   printf("second scatter hits: %u\n", hit_second_counter);
+  printf("second scatter first hits eff: %f\n", (double)first_hit_second_scatter/second_scatter_count);
   printf("second scatter counts: %u\n", second_scatter_count);
   printf("third scatter hits: %u\n", hit_third_counter);
+  printf("third scatter first hits eff: %f\n", (double)first_hit_third_scatter/third_scatter_count);
   printf("third scatter counts: %u\n", third_scatter_count); 
   printf(
       "(DUAL)CUT 'N': 'num' 'percent passing' 'cumulative percent passing'\n");
@@ -834,8 +852,11 @@ int main(int argc, char **argv) {
   if(min_energy_pores != NULL){
     fclose(min_energy_pores);
   }
-  if(scatter_layers != NULL){
-    fclose(scatter_layers);
+  if(first_scatter_layers != NULL){
+    fclose(first_scatter_layers);
+  }
+  if(first_scatter_detected_layers != NULL){
+    fclose(first_scatter_detected_layers);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

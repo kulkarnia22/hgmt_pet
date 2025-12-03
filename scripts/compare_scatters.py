@@ -24,8 +24,8 @@ def read_histogram(file_path):
     return np.array(bin_centers), np.array(counts)
 
 # Set your paths
-file_detected = "plots/first_scatter_detected_pointvac.txt"
-file_all = "plots/first_scatter_detector_pointvac.txt"
+file_detected = "data/first_scatter_detected_layers.data"
+file_all = "data/first_scatter_layers.data"
 
 # Read histogram data
 centers_detected, counts_detected = read_histogram(file_detected)
@@ -35,7 +35,7 @@ centers_all, counts_all = read_histogram(file_all)
 errors_detected = np.sqrt(counts_detected)/np.sum(counts_all)
 errors_all = np.sqrt(counts_all)/np.sum(counts_all)
 
-"""#Scatter Plot
+#Scatter Plot
 plt.errorbar(centers_all, counts_all/2000000, yerr=errors_all, fmt='-o', label='All First Scatters', capsize=3)
 plt.errorbar(centers_detected, counts_detected/2000000, yerr=errors_detected, fmt='-o', label='Detected First Scatters', capsize=3)
 
@@ -64,9 +64,9 @@ ytick_labels = [round_sig(y, 2) for y in yticks]
 
 plt.yticks(yticks, ytick_labels)
 plt.savefig("plots/first_scatter_comparison.png")
-plt.show()"""
+plt.show()
 
-#Integral Plots
+"""#Integral Plots
 integral_detected = [np.sum(counts_detected[:i+1]/2000000) for i in range(len(counts_detected))]
 integral_all = [np.sum(counts_all[:i+1]/2000000) for i in range(len(counts_all))]
 
@@ -108,4 +108,4 @@ ytick_labels = [round_sig(y, 2) for y in yticks]
 plt.yticks(yticks, ytick_labels)
 
 plt.savefig("plots/integral_scatter_comparison.png")
-plt.show()
+plt.show()"""

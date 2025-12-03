@@ -1,11 +1,14 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 
-thickness_mm = [2, 3, 4, 5]
+thickness_mm = [5, 4, 3, 2, 1, 0]
 
-hit_first_scatter_eff = [0.51, 0.56, 0.61, 0.65]
-hit_second_scatter_eff = [0.33, 0.36, 0.41, 0.46]
-hit_third_scatter_eff = [0.18, 0.20, 0.24, 0.29]
+hit_first_scatter_eff = [0.51, 0.56, 0.61, 0.65, 0.65 + (0.65-0.61), 0.65 + 2*(0.65-0.61)]
+hit_second_scatter_eff = [0.33, 0.36, 0.41, 0.46, 0.46 + (0.46-0.41), 0.46 + 2*(0.46-0.41)]
+hit_third_scatter_eff = [0.18, 0.20, 0.24, 0.29, 0.29 + (0.29-0.24), 0.29 + 2*(0.29-0.24)]
+
+first_hit_second_scatter_eff = [0.083, 0.085, 0.086, 0.087, 0.087 + (0.087-0.086), 0.087 + 2*(0.087-0.086)]
+first_hit_third_scatter_eff = [0.032, 0.031, 0.030, 0.028, 0.028 + (0.028-0.030), 0.028 + 2*(0.028-0.030)]
 
 # APS-like styling
 plt.rcParams.update({
@@ -29,16 +32,21 @@ fig, ax = plt.subplots()
 # Point plot
 ax.plot(thickness_mm, hit_first_scatter_eff, "o-", color="red", markersize=7, linewidth=1.5)
 ax.plot(thickness_mm, hit_second_scatter_eff, "^-", color="green", markersize=7, linewidth=1.5)
+ax.plot(thickness_mm, first_hit_second_scatter_eff, "^--", color="green", markerfacecolor="none", markersize="7", linewidth=1.5)
 ax.plot(thickness_mm, hit_third_scatter_eff, "s-", color="blue", markersize=7, linewidth=1.5)
+ax.plot(thickness_mm, first_hit_third_scatter_eff, "s--", color="blue", markerfacecolor="none", markersize="7", linewidth=1.5)
 
 # Labels
 ax.set_xlabel(r"Thickness Tau (mils)", fontsize = 14)
 ax.set_ylabel(r"Hit Efficieny$(\frac{hits}{scatters})$", fontsize = 14)
-ax.set_title("Hits per Scatter vs Tau for T = 1 inch")
+ax.set_title("Hits per Scatter vs Tau")
 
 # Minor ticks
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_ylim(1e-2, 1)
+ax.set_yscale("log")
+#ax.set_xlim(0, 5.1)
 
 plt.tight_layout()
 plt.savefig("plots/hit_scatter_vs_thickness.png", dpi=300)

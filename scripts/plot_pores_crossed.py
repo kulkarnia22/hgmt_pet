@@ -86,7 +86,7 @@ fig, ax = plt.subplots()
 
 ax.plot(ks, y_vals, "o", markersize=7, color="black")
 ax.set_xlabel("Minimum Number of Pores Crossed")
-ax.set_ylabel(r"$\frac{hits}{gamma}$")
+ax.set_ylabel(r"$\frac{first \ hits}{gamma}$")
 ax.set_title("Hits Per Gamma vs The Minimum Number of Pores Crossed")
 
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
