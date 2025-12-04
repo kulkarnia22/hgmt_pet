@@ -2,8 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, AutoMinorLocator, FormatStrFormatter
 
-tau  = np.array([5, 4, 3, 2, 1, 0])
-chains_per_gamma = np.array([0.68, 0.72, 0.76, 0.79, 0.79 + (0.79 - 0.76), 0.79 + (0.79 - 0.76)*2])
+tau  = np.array([5, 4, 3, 2, 1])
+chains_per_gamma = np.array([0.68, 0.72, 0.76, 0.79, 0.79 + (0.79 - 0.76)])
+
+m, b = np.polyfit(tau, chains_per_gamma, 1)   # slope m, intercept b
+x_line = np.linspace(0.5, tau.max(), 200)   # includes x = 0
+y_line = m * x_line + b
 
 plt.rcParams.update({
     "figure.figsize": (8, 5),
@@ -16,14 +20,16 @@ plt.rcParams.update({
 })
 
 fig, ax = plt.subplots()
-ax.plot(tau, chains_per_gamma, marker='o', ms = 10, linewidth=2)
+ax.plot(tau, chains_per_gamma, marker='o', ms = 10, color="black")
+ax.plot(x_line, y_line, linestyle="-", color="black")
+
 
 ax.set_xlabel("Tau (mil)", fontsize=16)
 ax.set_ylabel(r"Compton Chains per Gamma($\frac{Compton \ Chains}{Gammas}$)", fontsize=16)
 ax.set_title("Compton Chains per Gamma", fontsize=18)
 
 # --- Axes limits ---
-#ax.set_xlim(0.0, 5.1)
+ax.set_xlim(0.0, 5.1)
 ax.set_ylim(0.0, 1.00)   # accommodates full data range
 
 
