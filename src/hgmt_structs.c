@@ -181,7 +181,7 @@ int pores_crossed(event *first_hit){
     double phi_alpha_diff = alpha/(2*r);
     double new_phi = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
     double new_phi_diff = wrap_pi(final_phi - new_phi);
-    int num_pores_crossed = 1 + floor(fabs(r*new_phi_diff/(alpha + tau)));
+    int num_pores_crossed = 1 + floor(fabs(r*new_phi_diff/tau));
     return num_pores_crossed;
 
 }
@@ -227,19 +227,31 @@ double min_energy(event *first_hit, int num_crosses){
     //now I need to find distance to first pore
     double r = (r1 + r2)/2;
     phi_diff = wrap_pi(phi_pore - hit_phi);
-    double phi_alpha_diff = alpha/(2*r);
+    double phi_alpha_diff = wrap_pi(alpha/(2*r));
     double phi_prime = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
     //first need to find change of phi to first pore
     double t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
     double new_range = s_max_mm - t;
-    double min_energy = scatter_energy - pg_kapton_energy_keV(new_range);
+    //double min_energy = scatter_energy - pg_kapton_energy_keV(new_range);
+    double min_energy = pg_kapton_energy_keV(new_range);
     int num_pores = num_crosses - 1;
-    double phi_per_pore = tau/r;
+    double phi_per_pore = wrap_pi(tau/r);
+    if (t < 0){
+        printf("t_first value: %f\n", t);
+    }
     for (int i = 0; i < num_pores; i ++){
         phi_prime += phi_per_pore;
-        t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
+        phi_prime = wrap_pi(phi_prime);
+        double t_old = t;
+        t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime)) - t_old;
         new_range -= t;
-        min_energy -= pg_kapton_energy_keV(new_range);
+        if (t < 0){
+            //printf("t value: %f\n", t);
+            return(0);
+        }
+        //small cases where t is negative. will have to work through that. That doesn't make any sense tbh.
+        //min_energy -= pg_kapton_energy_keV(new_range);
+        min_energy = pg_kapton_energy_keV(new_range);
     }
     return min_energy;    
 }
