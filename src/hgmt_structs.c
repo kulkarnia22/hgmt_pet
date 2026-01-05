@@ -159,31 +159,38 @@ int pores_crossed(event *first_hit){
     double pitch_phi = (tau + alpha)/hit_R;
     double phi_pore  = i * pitch_phi; 
     vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
+    //If this is positive I move ccw. If it is negative I move cw.
     double uphi = vec_dot(u, ephi);
     int dir = (uphi >= 0) ? 1 : -1;
+    //this tells me how much phi I need to move in the dir of my electron to reach the pore
     double dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
+    //if the phi I need to move is really big, then I must be looking at the wrong pore. 
+    //I update it here.
     if (dphi_fwd > 0.5*pitch_phi){
         i += dir;
         phi_pore = i*pitch_phi;
     }
+    //Now, what is the unsigned smallest angular difference between my pore phi and hit phi
+    //I will use this below to get to the angular coord of my first pore entrance.
     double phi_diff = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
 
     double scatter_energy = first_hit->energy;
     double s_max_mm = pg_kapton_range_mm(scatter_energy);
     vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
-    double r1 = hit_R;
-    double r2 = radial_dist(final_pos);
+    //double r1 = hit_R;
+    //double r2 = radial_dist(final_pos);
     double final_phi = wrap_2pi(atan2(final_pos.y, final_pos.x));
 
     //once I'm in mm I'm good
     //but because of angle trouble I need to stay in phi coords until the very end
     //technically electron won't lose energy in the pore
-    double r = (r1 + r2)/2;
-    double phi_alpha_diff = alpha/(2*r);
+    //double r = (r1 + r2)/2;
+    double phi_alpha_diff = alpha/(2*hit_R);
     double new_phi = hit_phi + dir * phi_diff - dir * phi_alpha_diff;
     double new_phi_diff = (dir > 0) ? wrap_2pi(final_phi - wrap_2pi(new_phi))
                                  : wrap_2pi(wrap_2pi(new_phi) - final_phi);
-    int num_pores_crossed = 1 + floor(fabs(r*new_phi_diff/tau));
+    //new_phi_diff now should always be positive.
+    int num_pores_crossed = 1 + floor(hit_R*new_phi_diff/tau);
     return num_pores_crossed;
 
 }
