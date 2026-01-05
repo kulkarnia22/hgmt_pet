@@ -57,6 +57,14 @@ static inline double wrap_pi(double a) {
     return a - PI;  // in (-π, π]
 }
 
+static inline double wrap_2pi(double phi)
+{
+    phi = fmod(phi, 2.0*PI);
+    if (phi < 0)
+        phi += 2.0*PI;
+    return phi;
+}
+
 bool plane_crossingv2(event *single_event){
     vec3d scatter_pos = vec_scale(single_event->position, 10);
     vec3d u = vec_norm(single_event->direction);
@@ -143,44 +151,38 @@ int pores_crossed(event *first_hit){
     vec3d hit_pos = vec_scale(first_hit->position, 10);
     vec3d u = vec_norm(first_hit->direction);
     double hit_R = sqrt(hit_pos.x*hit_pos.x + hit_pos.y*hit_pos.y);
-    double hit_phi = atan2(hit_pos.y, hit_pos.x);
+    double hit_phi = wrap_2pi(atan2(hit_pos.y, hit_pos.x));
     double tau = um_to_mm(TAU);
     double alpha = um_to_mm(ALPHA);
-    double i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
+    int i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
 
-    double phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
-
-    double phi_diff = wrap_pi(phi_pore - hit_phi);
+    double pitch_phi = (tau + alpha)/hit_R;
+    double phi_pore  = i * pitch_phi; 
     vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
     double uphi = vec_dot(u, ephi);
-    
-    //adjusting pore to look at based on direction of scatter
-    if(uphi * phi_diff < 0){
-        if(phi_pore > hit_phi){
-            i -= 1;
-            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
-        }
-        else{
-            i += 1;
-            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
-        }
+    int dir = (uphi >= 0) ? 1 : -1;
+    double dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
+    if (dphi_fwd > 0.5*pitch_phi){
+        i += dir;
+        phi_pore = i*pitch_phi;
     }
+    double phi_diff = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
 
     double scatter_energy = first_hit->energy;
     double s_max_mm = pg_kapton_range_mm(scatter_energy);
     vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
     double r1 = hit_R;
     double r2 = radial_dist(final_pos);
-    double final_phi = atan2(final_pos.y, final_pos.x);
+    double final_phi = wrap_2pi(atan2(final_pos.y, final_pos.x));
 
     //once I'm in mm I'm good
     //but because of angle trouble I need to stay in phi coords until the very end
     //technically electron won't lose energy in the pore
     double r = (r1 + r2)/2;
-    phi_diff = wrap_pi(phi_pore - hit_phi);
     double phi_alpha_diff = alpha/(2*r);
-    double new_phi = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
-    double new_phi_diff = wrap_pi(final_phi - new_phi);
+    double new_phi = hit_phi + dir * phi_diff - dir * phi_alpha_diff;
+    double new_phi_diff = (dir > 0) ? wrap_2pi(final_phi - wrap_2pi(new_phi))
+                                 : wrap_2pi(wrap_2pi(new_phi) - final_phi);
     int num_pores_crossed = 1 + floor(fabs(r*new_phi_diff/tau));
     return num_pores_crossed;
 
@@ -194,14 +196,14 @@ double min_energy(event *first_hit, int num_crosses){
     vec3d hit_pos = vec_scale(first_hit->position, 10);
     vec3d u = vec_norm(first_hit->direction);
     double hit_R = sqrt(hit_pos.x*hit_pos.x + hit_pos.y*hit_pos.y);
-    double hit_phi = atan2(hit_pos.y, hit_pos.x);
+    double hit_phi = wrap_2pi(atan2(hit_pos.y, hit_pos.x));
     double tau = um_to_mm(TAU);
     double alpha = um_to_mm(ALPHA);
     double i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
 
-    double phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+    double phi_pore = i*(tau + alpha)/hit_R;
 
-    double phi_diff = wrap_pi(phi_pore - hit_phi);
+    double phi_diff = wrap_2pi(phi_pore - hit_phi);
     vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
     double uphi = vec_dot(u, ephi);
     
@@ -209,11 +211,11 @@ double min_energy(event *first_hit, int num_crosses){
     if(uphi * phi_diff < 0){
         if(phi_pore > hit_phi){
             i -= 1;
-            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+            phi_pore = wrap_2pi(i*(tau + alpha)/hit_R);
         }
         else{
             i += 1;
-            phi_pore = wrap_pi(i*(tau + alpha)/hit_R);
+            phi_pore = wrap_2pi(i*(tau + alpha)/hit_R);
         }
     }
 
@@ -226,28 +228,41 @@ double min_energy(event *first_hit, int num_crosses){
 
     //now I need to find distance to first pore
     double r = (r1 + r2)/2;
-    phi_diff = wrap_pi(phi_pore - hit_phi);
-    double phi_alpha_diff = wrap_pi(alpha/(2*r));
-    double phi_prime = wrap_pi(hit_phi + phi_diff - phi_alpha_diff);
+    phi_diff = wrap_2pi(phi_pore - hit_phi);
+    double phi_alpha_diff = wrap_2pi(alpha/(2*r));
+    double phi_prime = hit_phi + phi_diff - phi_alpha_diff;
     //first need to find change of phi to first pore
     double t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
     double new_range = s_max_mm - t;
     //double min_energy = scatter_energy - pg_kapton_energy_keV(new_range);
     double min_energy = pg_kapton_energy_keV(new_range);
     int num_pores = num_crosses - 1;
-    double phi_per_pore = wrap_pi(tau/r);
+    int dir = (uphi >= 0) ? +1 : -1;
+    double phi_per_pore = dir * (tau/r);
+    double t_old = t;
     if (t < 0){
-        printf("t_first value: %f\n", t);
+        printf("event detected?: %d\n", first_hit->detected);
+        printf("s_max_mm: %f\n", s_max_mm);
+        printf("initial pos pi: (%f, %f, %f)\n", hit_pos.x, hit_pos.y, hit_pos.z);
+        printf("unit direction u: (%f, %f, %f)\n", u.x, u.y, u.z);
+        printf("hit_phi: %f\n", hit_phi);
+        printf("phi_pore: %f\n", phi_pore);
+        printf("t_first value: %f\n\n", t);
     }
     for (int i = 0; i < num_pores; i ++){
         phi_prime += phi_per_pore;
-        phi_prime = wrap_pi(phi_prime);
-        double t_old = t;
+        //phi_prime = wrap_pi(phi_prime);
         t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime)) - t_old;
         new_range -= t;
+        t_old = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
         if (t < 0){
-            //printf("t value: %f\n", t);
-            return(0);
+            printf("event detected?: %d\n", first_hit->detected);
+            printf("s_max_mm: %f\n", s_max_mm);
+            printf("initial pos pi: (%f, %f, %f)\n", hit_pos.x, hit_pos.y, hit_pos.z);
+            printf("unit direction u: (%f, %f, %f)\n", u.x, u.y, u.z);
+            printf("hit_phi: %f\n", hit_phi);
+            printf("phi_pore: %f\n", phi_pore);
+            printf("t value: %f\n\n", t);
         }
         //small cases where t is negative. will have to work through that. That doesn't make any sense tbh.
         //min_energy -= pg_kapton_energy_keV(new_range);
