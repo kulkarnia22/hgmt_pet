@@ -32,6 +32,7 @@ print(f"Kept {len(pores)} events with >=1 pore crossed")
 # ------------------------------
 
 max_pores = min(pores.max(), max_pores_in_file)
+print("max_pores = " + str(max_pores))
 counts_exact = np.bincount(pores, minlength=max_pores + 1)
 # counts_exact[0] is for value 0, which we discarded; ignore index 0
 

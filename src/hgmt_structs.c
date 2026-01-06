@@ -69,51 +69,53 @@ bool plane_crossingv2(event *single_event){
     vec3d scatter_pos = vec_scale(single_event->position, 10);
     vec3d u = vec_norm(single_event->direction);
     double R_scatter = radial_dist(scatter_pos);
-    double phi_scatter = atan2(scatter_pos.y, scatter_pos.x);
+    double phi_scatter = wrap_2pi(atan2(scatter_pos.y, scatter_pos.x));
     double tau = um_to_mm(TAU);
     double alpha = um_to_mm(ALPHA);
-    double i = pg_nearest_int((R_scatter*phi_scatter)/(tau + alpha));//index of nearest pore
+    int i = pg_nearest_int((R_scatter*phi_scatter)/(tau + alpha));//index of nearest pore
 
-    //now I need to see if I am moving away from or towards this pore
-    double phi_pore = wrap_pi(i*(tau + alpha)/R_scatter);
-    //need to check if I am inside pore plane
-    if(R_scatter*fabs(wrap_pi(phi_scatter - phi_pore)) < alpha/2){
+    double pitch_phi = (tau + alpha) / R_scatter;
+    double phi_pore = i * pitch_phi;     // unwrapped
+    // check if scatter starts inside the pore (vacuum gap) -> exclude
+    double dphi_min = wrap_pi(phi_scatter - wrap_2pi(phi_pore));  // minimum signed diff in [-pi,pi]
+    if (R_scatter * fabs(dphi_min) < alpha/2) {
         return 0;
     }
 
-    double phi_diff = wrap_pi(phi_pore - phi_scatter);
     vec3d ephi = three_vec(-sin(phi_scatter), cos(phi_scatter), 0);
     double uphi = vec_dot(u, ephi);
-    
-    //adjusting pore to look at based on direction of scatter
-    if(uphi * phi_diff < 0){
-        if(phi_pore > phi_scatter){
-            i -= 1;
-            phi_pore = wrap_pi(i*(tau + alpha)/R_scatter);
-        }
-        else{
-            i += 1;
-            phi_pore = wrap_pi(i*(tau + alpha)/R_scatter);
-        }
+    int dir = (uphi >= 0) ? +1 : -1;
+
+    double dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - phi_scatter)
+                                : wrap_2pi(phi_scatter - phi_pore);
+
+    if (dphi_fwd > 0.5 * pitch_phi) {
+        i += dir;
+        phi_pore = i * pitch_phi;
+        dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - phi_scatter)
+                            : wrap_2pi(phi_scatter - phi_pore);
     }
+    double dphi_to_entrance = dphi_fwd - alpha/(2*R_scatter);
     //now we check if the electron reaches a pore
     double scatter_energy = single_event->energy;
     double s_max_mm = pg_kapton_range_mm(scatter_energy);
-    //first, we need to make adjustments to s_max_mm in case electron leaves first
-    //I will deal with that once I get things working
+
     vec3d final_pos = vec_add(scatter_pos, vec_scale(u, s_max_mm));
-    double r1 = R_scatter;
-    double r2 = radial_dist(final_pos);
-    double final_phi = atan2(final_pos.y, final_pos.x);
-    phi_diff = wrap_pi(final_phi - phi_scatter);
-    double pore_scatter_diff = wrap_pi(phi_pore - phi_scatter);
-    double r = (r1 + r2)/2;
-    double alpha_diff = wrap_pi(alpha/(2*r));
-    double angle_to_pore = wrap_pi(pore_scatter_diff - alpha_diff);
-    if (fabs(r*phi_diff) > fabs(r*angle_to_pore)){
-        return 1;
-    }
-    return 0;
+    double final_phi = wrap_2pi(atan2(final_pos.y, final_pos.x));
+
+    // total forward angular travel available
+    double dphi_total = (dir > 0) ? wrap_2pi(final_phi - phi_scatter)
+                                : wrap_2pi(phi_scatter - final_phi);
+
+    // forward angular distance to pore center (phi_pore must already be the "ahead" one)
+    double dphi_to_center = (dir > 0) ? wrap_2pi(phi_pore - phi_scatter)
+                                    : wrap_2pi(phi_scatter - phi_pore);
+
+    // forward angular distance to entrance
+    dphi_to_entrance = dphi_to_center - alpha/(2*R_scatter);
+    if (dphi_to_entrance < 0) dphi_to_entrance = 0;
+
+    return (dphi_total >= dphi_to_entrance);
 
     //commented out bottom due to problematic edge case that I try to fix above
     /*double phi1_mm = r1*phi_scatter;
@@ -186,11 +188,18 @@ int pores_crossed(event *first_hit){
     //technically electron won't lose energy in the pore
     //double r = (r1 + r2)/2;
     double phi_alpha_diff = alpha/(2*hit_R);
-    double new_phi = hit_phi + dir * phi_diff - dir * phi_alpha_diff;
-    double new_phi_diff = (dir > 0) ? wrap_2pi(final_phi - wrap_2pi(new_phi))
-                                 : wrap_2pi(wrap_2pi(new_phi) - final_phi);
-    //new_phi_diff now should always be positive.
-    int num_pores_crossed = 1 + floor(hit_R*new_phi_diff/tau);
+    // total forward travel from hit -> final, in the direction of motion
+    double dphi_total = (dir > 0) ? wrap_2pi(final_phi - hit_phi)
+                                : wrap_2pi(hit_phi - final_phi);
+    // forward travel from hit -> first pore entrance
+    double dphi_to_entrance = phi_diff - phi_alpha_diff;
+    // numerical safety
+    if (dphi_to_entrance < 0) dphi_to_entrance = 0;
+    // if it doesn't even reach the first entrance, it crosses 0 pores
+    // (if your dataset guarantees >=1 crossing, you can keep this anyway—it's harmless)
+    if (dphi_total < dphi_to_entrance) return 0;
+    double dphi_rem = dphi_total - dphi_to_entrance;
+    int num_pores_crossed = 1 + (int)floor((hit_R * dphi_rem) / tau);
     return num_pores_crossed;
 
 }
@@ -206,46 +215,44 @@ double min_energy(event *first_hit, int num_crosses){
     double hit_phi = wrap_2pi(atan2(hit_pos.y, hit_pos.x));
     double tau = um_to_mm(TAU);
     double alpha = um_to_mm(ALPHA);
-    double i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
+    int i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
 
-    double phi_pore = i*(tau + alpha)/hit_R;
-
-    double phi_diff = wrap_2pi(phi_pore - hit_phi);
+    double pitch_phi = (tau + alpha)/hit_R;
+    double phi_pore  = i * pitch_phi; 
     vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
     double uphi = vec_dot(u, ephi);
     
-    //adjusting pore to look at based on direction of scatter
-    if(uphi * phi_diff < 0){
-        if(phi_pore > hit_phi){
-            i -= 1;
-            phi_pore = wrap_2pi(i*(tau + alpha)/hit_R);
-        }
-        else{
-            i += 1;
-            phi_pore = wrap_2pi(i*(tau + alpha)/hit_R);
-        }
+    int dir = (uphi >= 0) ? 1 : -1;
+    //this tells me how much phi I need to move in the dir of my electron to reach the pore
+    double dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
+    //if the phi I need to move is really big, then I must be looking at the wrong pore. 
+    //I update it here.
+    if (dphi_fwd > 0.5*pitch_phi){
+        i += dir;
+        phi_pore = i*pitch_phi;
     }
+    //Now, what is the unsigned smallest angular difference between my pore phi and hit phi
+    //I will use this below to get to the angular coord of my first pore entrance.
+    double phi_diff = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
 
     double scatter_energy = first_hit->energy;
     double s_max_mm = pg_kapton_range_mm(scatter_energy);
-    vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
-    double r1 = hit_R;
-    double r2 = radial_dist(final_pos);
+    //vec3d final_pos = vec_add(hit_pos, vec_scale(u, s_max_mm));
+    //double r1 = hit_R;
+    //double r2 = radial_dist(final_pos);
     //double final_phi = atan2(final_pos.y, final_pos.x);
 
     //now I need to find distance to first pore
-    double r = (r1 + r2)/2;
-    phi_diff = wrap_2pi(phi_pore - hit_phi);
-    double phi_alpha_diff = wrap_2pi(alpha/(2*r));
-    double phi_prime = hit_phi + phi_diff - phi_alpha_diff;
+    //double r = (r1 + r2)/2;
+    double phi_alpha_diff = alpha/(2*hit_R);
+    double phi_prime = hit_phi + dir * phi_diff - dir * phi_alpha_diff;
     //first need to find change of phi to first pore
     double t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
     double new_range = s_max_mm - t;
     //double min_energy = scatter_energy - pg_kapton_energy_keV(new_range);
     double min_energy = pg_kapton_energy_keV(new_range);
     int num_pores = num_crosses - 1;
-    int dir = (uphi >= 0) ? +1 : -1;
-    double phi_per_pore = dir * (tau/r);
+    double phi_per_pore = dir * (tau/hit_R);
     double t_old = t;
     if (t < 0){
         printf("event detected?: %d\n", first_hit->detected);
@@ -254,7 +261,9 @@ double min_energy(event *first_hit, int num_crosses){
         printf("unit direction u: (%f, %f, %f)\n", u.x, u.y, u.z);
         printf("hit_phi: %f\n", hit_phi);
         printf("phi_pore: %f\n", phi_pore);
+        printf("num pores crossed: %u\n", num_pores);
         printf("t_first value: %f\n\n", t);
+        return 0;
     }
     for (int i = 0; i < num_pores; i ++){
         phi_prime += phi_per_pore;
@@ -269,7 +278,9 @@ double min_energy(event *first_hit, int num_crosses){
             printf("unit direction u: (%f, %f, %f)\n", u.x, u.y, u.z);
             printf("hit_phi: %f\n", hit_phi);
             printf("phi_pore: %f\n", phi_pore);
+            printf("num pores crossed: %u\n", num_pores);
             printf("t value: %f\n\n", t);
+            return 0;
         }
         //small cases where t is negative. will have to work through that. That doesn't make any sense tbh.
         //min_energy -= pg_kapton_energy_keV(new_range);
