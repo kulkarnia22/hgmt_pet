@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+'''import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 import numpy as np
 
@@ -81,4 +81,75 @@ ax.set_xlim(0, 5.1)
 
 plt.tight_layout()
 plt.savefig("plots/hit_scatter_vs_thickness.png", dpi=300)
+plt.show()'''
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoMinorLocator
+
+
+def plot_prettier(dpi=150, fontsize=17):
+	plt.rcParams['figure.dpi'] = dpi
+	plt.rc("savefig", dpi=dpi)
+	plt.rc('font', size=fontsize)
+	plt.rc('xtick', direction='in')
+	plt.rc('ytick', direction='in')
+	plt.rc('xtick.major', pad=5)
+	plt.rc('xtick.minor', pad=5)
+	plt.rc('ytick.major', pad=5)
+	plt.rc('ytick.minor', pad=5)
+	plt.rc('lines', dotted_pattern = [2., 2.])
+	# plt.rc('text', usetex=True)
+
+plot_prettier()
+
+def add_minor_ticks(plot, ticks, bot=True, tp=True, lft=True, rght=True, xticks=None, yticks=None):
+	plot.tick_params(which = 'minor', bottom=bot, top=tp, left=lft, right=rght)
+	plot.tick_params(bottom=True, top=True, left=True, right=True)
+	if (bot or tp):
+		if (xticks != None):
+			plot.xaxis.set_minor_locator(AutoMinorLocator(int(xticks)))
+		else:
+			plot.xaxis.set_minor_locator(AutoMinorLocator(int(ticks)))
+	if (lft or rght):
+		if (yticks != None):
+			plot.yaxis.set_minor_locator(AutoMinorLocator(int(yticks)))
+		else:
+			plot.yaxis.set_minor_locator(AutoMinorLocator(int(ticks)))	
+
+
+
+tau  = np.array([5, 4, 3, 2, 1])
+hit_first_scatter_eff = [0.51, 0.56, 0.61, 0.65, 0.686545]
+hit_second_scatter_eff = [0.33, 0.36, 0.41, 0.46, 0.540820]
+hit_third_scatter_eff = [0.18, 0.20, 0.24, 0.29, 0.399484]
+first_hit_second_scatter_eff = [0.083, 0.085, 0.086, 0.087, 0.089053]
+first_hit_third_scatter_eff = [0.032, 0.031, 0.030, 0.028, 0.028398]
+
+ex_fig = plt.figure()
+ex_plt = ex_fig.add_subplot()
+ex_fig.subplots_adjust(top=0.88,bottom=0.13,left=0.17,right=0.9,hspace=0.2,wspace=0.2)
+
+ex_plt.plot(tau, hit_first_scatter_eff, 'o-', label=r"$ e^{-x} $", ms=10, color="black")
+ex_plt.plot(tau, hit_second_scatter_eff, '^-', label=r"$ e^{-x} $", ms=10, color="green")
+ex_plt.plot(tau, hit_third_scatter_eff, 's-', label=r"$ e^{-x} $", ms=10, color="blue")
+ex_plt.plot(tau, first_hit_second_scatter_eff, '^--', label=r"$ e^{-x} $", ms=10, markerfacecolor="none",color="green")
+ex_plt.plot(tau, first_hit_third_scatter_eff, 's--', label=r"$ e^{-x} $", ms=10, markerfacecolor="none",color="blue")
+
+ex_plt.set_xlim(left=0)
+ex_plt.set_ylim(bottom=0)
+ex_plt.set_ylim(top=1.0)
+
+ex_plt.set_xlabel("Tau(mils)")
+ex_plt.set_ylabel(r"Hits per Scatter($\frac{Hits}{Scatters}$)")
+ex_plt.set_title("Log Plot Hits per Scatter vs Tau")
+
+add_minor_ticks(ex_plt, 5)
+ex_plt.set_yscale("log")
+ex_plt.set_ylim(1e-2, 1)
+
+plt.savefig("plots/log_hits_per_scatter.png")
+
+
 plt.show()
+

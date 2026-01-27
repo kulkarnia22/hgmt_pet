@@ -116,25 +116,6 @@ bool plane_crossingv2(event *single_event){
     if (dphi_to_entrance < 0) dphi_to_entrance = 0;
 
     return (dphi_total >= dphi_to_entrance);
-
-    //commented out bottom due to problematic edge case that I try to fix above
-    /*double phi1_mm = r1*phi_scatter;
-    double phi2_mm = r2*atan2(final_pos.y,final_pos.x); 
-    double phi_travelled = phi2_mm - phi1_mm;
-    if (phi_pore > phi_scatter){
-        if (fabs(phi_travelled) > fabs(((r1+r2)/2)*(phi_pore - phi_scatter) - alpha/2)){
-            return 1;
-        }
-        else{
-            return 0;
-        }
-    }
-    if(phi_pore < phi_scatter){
-        if (fabs(phi_travelled) > fabs(((r1+r2)/2)*(phi_pore - phi_scatter) + alpha/2)){
-            return 1;
-        }
-    }
-    return 0;*/
 }
 
 int pores_crossed(event *first_hit){
@@ -263,7 +244,6 @@ double min_energy(event *first_hit, int num_crosses){
         printf("phi_pore: %f\n", phi_pore);
         printf("num pores crossed: %u\n", num_pores);
         printf("t_first value: %f\n\n", t);
-        return 0;
     }
     for (int i = 0; i < num_pores; i ++){
         phi_prime += phi_per_pore;
@@ -280,13 +260,42 @@ double min_energy(event *first_hit, int num_crosses){
             printf("phi_pore: %f\n", phi_pore);
             printf("num pores crossed: %u\n", num_pores);
             printf("t value: %f\n\n", t);
-            return 0;
         }
         //small cases where t is negative. will have to work through that. That doesn't make any sense tbh.
         //min_energy -= pg_kapton_energy_keV(new_range);
         min_energy = pg_kapton_energy_keV(new_range);
     }
     return min_energy;    
+}
+
+double angle_to_normal_inside_pore(event *first_hit){
+    vec3d hit_pos = vec_scale(first_hit->position, 10);
+    vec3d u = vec_norm(first_hit->direction);
+    double hit_R = sqrt(hit_pos.x*hit_pos.x + hit_pos.y*hit_pos.y);
+    double hit_phi = wrap_2pi(atan2(hit_pos.y, hit_pos.x));
+    double tau = um_to_mm(TAU);
+    double alpha = um_to_mm(ALPHA);
+    int i = pg_nearest_int((hit_R*hit_phi)/(tau + alpha));//index of nearest pore
+
+    double pitch_phi = (tau + alpha)/hit_R;
+    double phi_pore  = i * pitch_phi; 
+    vec3d ephi = three_vec(-sin(hit_phi), cos(hit_phi), 0);
+    double uphi = vec_dot(u, ephi);
+    
+    int dir = (uphi >= 0) ? 1 : -1;
+    //this tells me how much phi I need to move in the dir of my electron to reach the pore
+    double dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - hit_phi): wrap_2pi(hit_phi - phi_pore);
+    //if the phi I need to move is really big, then I must be looking at the wrong pore. 
+    //I update it here.
+    if (dphi_fwd > 0.5*pitch_phi){
+        i += dir;
+        phi_pore = i*pitch_phi;
+    }
+
+    vec3d phi_vector = vec_norm(three_vec(-sin(phi_pore), cos(phi_pore), 0));
+    double product = vec_dot(phi_vector, u);
+    double phi = acos(product);
+    return phi;
 }
 
 bool plane_crossing(event *single_event){

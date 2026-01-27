@@ -82,6 +82,7 @@ FILE *pores_crossed_first_hit;
 FILE *min_energy_pores;
 FILE *first_scatter_layers;
 FILE *first_scatter_detected_layers;
+FILE *angle_inside_pore;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -203,10 +204,12 @@ int debug_path(photon_path *path, debug_context context) {
     event *single_event = first_hit->source;
     int num_pores_crossed = pores_crossed(single_event);
     double energy = min_energy(single_event, num_pores_crossed);
+    double theta_to_pore = angle_to_normal_inside_pore(single_event);
     
     fwrite(&num_pores_crossed, sizeof(int), 1, pores_crossed_first_hit);
     fwrite(&num_pores_crossed, sizeof(int), 1, min_energy_pores);
     fwrite(&energy, sizeof(double), 1, min_energy_pores); 
+    fwrite(&theta_to_pore, sizeof(double), 1, angle_inside_pore);
   }
 
   // getting all the important statistics
@@ -629,6 +632,12 @@ int main(int argc, char **argv) {
   min_energy_pores = fopen(min_energy_loc, "wb");
   free(min_energy_loc);
 
+  //opening file for angle inside pore
+  char *angle_pore_loc;
+  asprintf(&angle_pore_loc, "%sangle_inside_pore.data", args[2]);
+  angle_inside_pore = fopen(angle_pore_loc, "wb");
+  free(angle_pore_loc);
+
   //open file for scatter layer counts
   char *first_scatter_layer_loc;
   asprintf(&first_scatter_layer_loc, "%sfirst_scatter_layers.data", args[2]);
@@ -760,14 +769,19 @@ int main(int argc, char **argv) {
   printf("total first hits: %u\n", first_hits);
   printf("total chains: %u\n", chain_count);
   printf("total number of lors: %u\n", lor_count);
-  printf("first scatter hits: %u\n", hit_first_counter);
-  printf("first scatter count: %u\n", first_scatter_count);
-  printf("second scatter hits: %u\n", hit_second_counter);
+  printf("lors per annihil: %f\n", (double)lor_count/num_annihilations);
+  printf("chains per gamma: %f\n", (double)chain_count/(2*num_annihilations));
+  //printf("first scatter hits: %u\n", hit_first_counter);
+  //printf("first scatter count: %u\n", first_scatter_count);
+  printf("hits per first scatter: %f\n", (double)hit_first_counter/first_scatter_count);
+  //printf("second scatter hits: %u\n", hit_second_counter);
   printf("second scatter first hits eff: %f\n", (double)first_hit_second_scatter/second_scatter_count);
-  printf("second scatter counts: %u\n", second_scatter_count);
-  printf("third scatter hits: %u\n", hit_third_counter);
+  //printf("second scatter counts: %u\n", second_scatter_count);
+  printf("hits per second scatter: %f\n", (double)hit_second_counter/second_scatter_count);
+  //printf("third scatter hits: %u\n", hit_third_counter);
   printf("third scatter first hits eff: %f\n", (double)first_hit_third_scatter/third_scatter_count);
-  printf("third scatter counts: %u\n", third_scatter_count); 
+  //printf("third scatter counts: %u\n", third_scatter_count); 
+  printf("hits per third scatter: %f\n", (double)hit_third_counter/third_scatter_count);
   printf(
       "(DUAL)CUT 'N': 'num' 'percent passing' 'cumulative percent passing'\n");
   for (int i = 1; i < NUM_CUTS; i++)
@@ -857,6 +871,9 @@ int main(int argc, char **argv) {
   }
   if(first_scatter_detected_layers != NULL){
     fclose(first_scatter_detected_layers);
+  }
+  if(angle_inside_pore != NULL){
+    fclose(angle_inside_pore);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

@@ -87,5 +87,6 @@ bool plane_crossingv2(event *single_event);
 int get_detector(vec3d position);
 int pores_crossed(event *single_event);
 double min_energy(event *single_event, int num_crosses);
+double angle_to_normal_inside_pore(event *single_event);
 void free_annihilation(annihilation *annihilation_pointer);
 #endif

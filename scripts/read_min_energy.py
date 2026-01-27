@@ -72,6 +72,8 @@ def point_histogram(energies, title, outfile, nbins=50):
     ax.set_ylabel("Count")
     ax.set_title(title)
 
+    plt.yscale('log')
+
     # Minor ticks
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
@@ -92,18 +94,18 @@ def point_histogram(energies, title, outfile, nbins=50):
 
 point_histogram(
     energies_by_pores[1],
-    title="Min energy for events crossing 1 pore",
-    outfile="plots/min_energy_pores_1.png",
+    title="Log Plot Min energy for scatters crossing 1 pore",
+    outfile="plots/log_min_energy_pores_1.png",
 )
 
 point_histogram(
     energies_by_pores[2],
-    title="Min energy for events crossing 2 pores",
-    outfile="plots/min_energy_pores_2.png",
+    title="Log Plot Min energy for scatters crossing 2 pores",
+    outfile="plots/log_min_energy_pores_2.png",
 )
 
 point_histogram(
     energies_by_pores[3],
-    title="Min energy for events crossing 3 pores",
-    outfile="plots/min_energy_pores_3.png",
+    title="Log Plot Min energy for scatters crossing 3 pores",
+    outfile="plots/log_min_energy_pores_3.png",
 )
