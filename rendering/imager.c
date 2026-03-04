@@ -125,6 +125,7 @@ void normalize(graph *cells) {
     cells->values[i] *= scale;
 }
 void *worker(void *arg) {
+  //printf("%f = \n ", X_LENGTH);  
   thread_data *data = (thread_data *)arg;
   graph *result = (graph *)calloc(1, sizeof(graph));
   double one_over_likelihood_sum = 0;
@@ -188,7 +189,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
   iterations = strtoul(args[2], NULL, 10);
-  printf("here");
+  //printf("here");
   lor_file = fopen(args[0], "rb");
   char *filename;
   asprintf(&filename, "%simage_point_vac.voxels", args[1]);

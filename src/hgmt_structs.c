@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // including custom files
 #include "helper_functions.h"
@@ -17,24 +18,30 @@ hit event_to_hit(event *single_event) {
   new_hit.source = single_event;
   vec3d z_hat = three_vec(0.0, 0.0, 1.0);
   vec3d circ_hat = vec_norm(vec_cross(z_hat, single_event->position));
-  new_hit.position =
-      vec_add(single_event->position, vec_scale(z_hat, gaussian(LONG_UNC)));
+  /*new_hit.position =
+      vec_add(single_event->position, vec_scale(z_hat, gaussian(LONG_UNC)));*/
+  new_hit.position = single_event->position;
   vec3d offset = vec_add(vec_scale(z_hat, gaussian(LONG_UNC)),
                          vec_scale(circ_hat, gaussian(CIRC_UNC)));
   if (DETECTOR_SEGMENTATION) {
     // we move the radial component to the midpoint of the detector which it hit
     double rad_dist = radial_dist(single_event->position);
-    single_event->position = radial_scale(
+    /*single_event->position = radial_scale(
         single_event->position, (detector_positions[single_event->detector_id] +
                                  DETECTOR_THICKNESS / 2) /
-                                    rad_dist);
+                                    rad_dist);*/
+    new_hit.position = radial_scale(
+        new_hit.position, (detector_positions[single_event->detector_id] +
+                           DETECTOR_THICKNESS / 2)/rad_dist);
+    new_hit.position = vec_add(new_hit.position, offset);
   } else {
     vec3d r_hat = vec_norm(
         three_vec(single_event->position.x, single_event->position.y, 0));
     offset = vec_add(offset, vec_scale(r_hat, gaussian(RAD_UNC)));
+    new_hit.position = vec_add(single_event->position, offset);
   }
   new_hit.tof = single_event->tof + gaussian(TIME_UNC);
-  new_hit.position = vec_add(single_event->position, offset);
+  //new_hit.position = vec_add(single_event->position, offset);
   return new_hit;
 }
 bool is_detected(event *single_event, double eff_by_energy[COLS]) {
@@ -67,6 +74,7 @@ static inline double wrap_2pi(double phi)
 
 bool plane_crossingv2(event *single_event){
     vec3d scatter_pos = vec_scale(single_event->position, 10);
+    //vec3d scatter_pos = single_event->position;
     vec3d u = vec_norm(single_event->direction);
     double R_scatter = radial_dist(scatter_pos);
     double phi_scatter = wrap_2pi(atan2(scatter_pos.y, scatter_pos.x));
@@ -191,6 +199,7 @@ double min_energy(event *first_hit, int num_crosses){
     After that, for each new pore it crosses, I just need to decrease energy by
     tau mm equivalent.*/
     vec3d hit_pos = vec_scale(first_hit->position, 10);
+    //vec3d hit_pos = first_hit->position;
     vec3d u = vec_norm(first_hit->direction);
     double hit_R = sqrt(hit_pos.x*hit_pos.x + hit_pos.y*hit_pos.y);
     double hit_phi = wrap_2pi(atan2(hit_pos.y, hit_pos.x));

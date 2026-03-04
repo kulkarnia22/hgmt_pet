@@ -83,6 +83,7 @@ FILE *min_energy_pores;
 FILE *first_scatter_layers;
 FILE *first_scatter_detected_layers;
 FILE *angle_inside_pore;
+FILE *lor_file_no_tof;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -96,12 +97,12 @@ primitive_lor create_prim_lor(hit_split split) {
   // hit *hit2 = initial_by_neural_network(split.hits2, split.num_hits2);
   // hit *hit1 = initial_by_truth(split.hits1, split.num_hits1);
   // hit *hit2 = initial_by_truth(split.hits2, split.num_hits2);
-  // hit *hit1 = initial_by_least_time(split.hits1, split.num_hits1);
-  // hit *hit2 = initial_by_least_time(split.hits2, split.num_hits2);
+  hit *hit1 = initial_by_least_time(split.hits1, split.num_hits1);
+  hit *hit2 = initial_by_least_time(split.hits2, split.num_hits2);
   //hit *hit1 = initial_by_truth(split.hits1, split.num_hits1);
   //hit *hit2 = initial_by_truth(split.hits2, split.num_hits2);
-  hit *hit1 = initial_by_least_radial(split.hits1, split.num_hits1);
-  hit *hit2 = initial_by_least_radial(split.hits2, split.num_hits2);
+  //hit *hit1 = initial_by_least_radial(split.hits1, split.num_hits1);
+  //hit *hit2 = initial_by_least_radial(split.hits2, split.num_hits2);
   prim_lor.hit1 = *hit1;
   prim_lor.hit2 = *hit2;
   return prim_lor;
@@ -491,6 +492,8 @@ void *worker(void *arg) {
         fwrite(&second_id, sizeof(int), 1, lor_layer_decomp);
         fwrite(&first_num, sizeof(int), 1, lor_config_output);
         fwrite(&second_num, sizeof(int), 1, lor_config_output);
+        print_vec(context.prim_lor->hit1.position, lor_file_no_tof);
+        print_vec(context.prim_lor->hit2.position, lor_file_no_tof);
         print_lor(&new_lor, lor_output);
       }
     }
@@ -721,6 +724,11 @@ int main(int argc, char **argv) {
     asprintf(&lor_file_loc, "%sHGMTPointVac.lor", args[2]);
     lor_output = fopen(lor_file_loc, "wb");
     free(lor_file_loc);
+
+    char *lor_no_tof_file_loc;
+    asprintf(&lor_no_tof_file_loc, "%sHGMTPointVac_no_tof.lor", args[2]);
+    lor_file_no_tof = fopen(lor_no_tof_file_loc, "wb");
+    free(lor_no_tof_file_loc);
   }
 
   //opens lor configuration file
@@ -874,6 +882,9 @@ int main(int argc, char **argv) {
   }
   if(angle_inside_pore != NULL){
     fclose(angle_inside_pore);
+  }
+  if(lor_file_no_tof != NULL){
+    fclose(lor_file_no_tof);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

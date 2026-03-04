@@ -14,25 +14,25 @@ np.savetxt(text_file, angles, fmt="%.6f")"""
 #print(f"Converted {len(angles)} values from binary to {text_file}")
 print(photon_data[:100])"""
 
-#data check
-lor_file = "data/HGMTPointVac.lor"
-#photon_file = "data/Incoming_Photons.data"
+import numpy as np
 
-# file sizes
-lor_bytes = os.path.getsize(lor_file)
-#photon_bytes = os.path.getsize(photon_file)
+filename = "data/HGMTPointVac.lor"
 
-# number of doubles
-lor_doubles = lor_bytes // 8
-#photon_doubles = photon_bytes // 8
+# Each LOR has 9 doubles
+lor_size = 9
 
-# number of LORs
-num_lors = lor_doubles // 9
-# number of photons
-#num_photons = photon_doubles
+# Read file as double array
+data = np.fromfile(filename, dtype=np.float64)
 
-#print("Num photons:", num_photons)
-print("Num LORs:", num_lors)
-print("Sensitivity:", num_lors/1000000)
-#print("Photon/2:", num_photons // 2)
-#print("Match?", num_photons // 2 == num_lors)
+# Reshape into rows of 9 doubles
+lors = data.reshape(-1, lor_size)
+
+print("First 20 LORs:\n")
+
+for i in range(min(20, len(lors))):
+    x, y, z, c_xx, c_xy, c_xz, c_yy, c_yz, c_zz = lors[i]
+    
+    print(f"LOR {i}:")
+    print(f"  center = ({x:.4f}, {y:.4f}, {z:.4f})")
+    print(f"  covariance = [{c_xx:.4f}, {c_xy:.4f}, {c_xz:.4f}, {c_yy:.4f}, {c_yz:.4f}, {c_zz:.4f}]")
+    print()
