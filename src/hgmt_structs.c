@@ -23,6 +23,7 @@ hit event_to_hit(event *single_event) {
   new_hit.position = single_event->position;
   vec3d offset = vec_add(vec_scale(z_hat, gaussian(LONG_UNC)),
                          vec_scale(circ_hat, gaussian(CIRC_UNC)));
+  new_hit.position = vec_add(new_hit.position, offset);
   if (DETECTOR_SEGMENTATION) {
     // we move the radial component to the midpoint of the detector which it hit
     double rad_dist = radial_dist(single_event->position);
@@ -33,12 +34,12 @@ hit event_to_hit(event *single_event) {
     new_hit.position = radial_scale(
         new_hit.position, (detector_positions[single_event->detector_id] +
                            DETECTOR_THICKNESS / 2)/rad_dist);
-    new_hit.position = vec_add(new_hit.position, offset);
   } else {
     vec3d r_hat = vec_norm(
         three_vec(single_event->position.x, single_event->position.y, 0));
-    offset = vec_add(offset, vec_scale(r_hat, gaussian(RAD_UNC)));
-    new_hit.position = vec_add(single_event->position, offset);
+    //offset = vec_add(offset, vec_scale(r_hat, gaussian(RAD_UNC))); should be added already
+    vec3d rad_offset = vec_scale(r_hat, gaussian(RAD_UNC));
+    new_hit.position = vec_add(single_event->position, rad_offset);
   }
   new_hit.tof = single_event->tof + gaussian(TIME_UNC);
   //new_hit.position = vec_add(single_event->position, offset);

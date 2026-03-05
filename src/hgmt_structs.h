@@ -18,7 +18,7 @@ extern int count1;
 #define RAD_UNC 0.73         // cm
 #define TIME_UNC 0.1        // ns 1 inch over sqrt(12)
 #define DETECTOR_THICKNESS 2.54
-#define DETECTOR_SEGMENTATION 0
+#define DETECTOR_SEGMENTATION 1
 #define DIFFUSION_VARIANCE 0.00022
 #define E_MAX 520.0
 #define E_MIN 0.0
