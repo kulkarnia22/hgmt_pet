@@ -184,10 +184,15 @@ double sym_max_eigenvalue(sym_matrix mat) {
   double zz_2 = mat.zz * mat.zz;
   double p = sqrt((xx_2 + yy_2 + zz_2 + 2 * (xy_2 + xz_2 + yz_2)) / 6);
   double det = sym_det(&mat) / (p * p * p);
-  double theta = fabs(det) >= 2 ? (det > 0 ? 0 : M_PI) : acos(det / 2) / 3;
-  double root1 = 2 * cos(theta + 2 * M_PI / 3);
-  double root2 = 2 * cos(theta + 4 * M_PI / 3);
-  double root3 = 2 * cos(theta + 6 * M_PI / 3);
+  double theta = fabs(det) >= 2 ? (det > 0 ? 0 : PI) : acos(det / 2) / 3;
+  double root1 = 2 * cos(theta + 2 * PI / 3);
+  double root2 = 2 * cos(theta + 4 * PI / 3);
+  double root3 = 2 * cos(theta + 6 * PI / 3);
+  //double eig1 = p * root1 + q;
+  //double eig2 = p * root2 + q;
+  //double eig3 = p * root3 + q;
+
+  //printf("Eigenvalues: %f %f %f\n", eig1, eig2, eig3);
   return p * MAX(root1, MAX(root2, root3)) + q;
 }
 vec3d sym_eigenvector(sym_matrix *mat, double eigenvalue) {

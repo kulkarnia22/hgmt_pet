@@ -126,3 +126,30 @@ void printm(int num, uint mod) {
   if (num % mod == 0)
     printf("%i\n", num);
 }
+
+void non_col_correction(vec3d *hit1_pos, vec3d *hit2_pos){
+    vec3d u = vec_norm(vec_sub(*hit1_pos, *hit2_pos));
+    // choose reference vector not parallel to u
+    vec3d a;
+    if (fabs(u.x) < 0.9)
+        a = three_vec(1.0, 0.0, 0.0);
+    else
+        a = three_vec(0.0, 1.0, 0.0);
+
+    // build transverse basis
+    vec3d e1 = vec_norm(vec_cross(u, a));
+    vec3d e2 = vec_cross(u, e1);
+
+        // random direction in transverse plane
+    double phi = drand48() * 2.0 * PI;
+    vec3d n = vec_add(vec_scale(e1, cos(phi)),
+                      vec_scale(e2, sin(phi)));
+
+    // gaussian transverse shift
+    double d = gaussian(NONCOLLINEARITY_UNC);
+
+    // apply same shift to both endpoints
+    *hit1_pos = vec_add(*hit1_pos, vec_scale(n, d));
+    *hit2_pos = vec_add(*hit2_pos, vec_scale(n, d));
+
+}

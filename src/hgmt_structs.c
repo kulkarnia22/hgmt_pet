@@ -34,6 +34,10 @@ hit event_to_hit(event *single_event) {
     new_hit.position = radial_scale(
         new_hit.position, (detector_positions[single_event->detector_id] +
                            DETECTOR_THICKNESS / 2)/rad_dist);
+    vec3d r_hat = vec_norm(
+        three_vec(single_event->position.x, single_event->position.y, 0));
+    vec3d rad_offset = vec_scale(r_hat, gaussian(RAD_UNC));
+    new_hit.position = vec_add(single_event->position, rad_offset);
   } else {
     vec3d r_hat = vec_norm(
         three_vec(single_event->position.x, single_event->position.y, 0));

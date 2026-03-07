@@ -216,6 +216,11 @@ int main(int argc, char **argv) {
   uint num_lors = 0;
   uint num_comps = 0;
   printf("First pass, creating heatmap as first guess...\n");
+  //printf("X_LENGTH = %f\n", X_LENGTH);
+  printf("Y_LENGTH = %f\n", Y_LENGTH);
+  printf("X_RES = %d\n", X_RES);
+  printf("Y_RES = %d\n", Y_RES);
+
   while (true) {
     if (!read_lor(&new_lor, lor_file))
       break;

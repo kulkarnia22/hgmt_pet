@@ -43,15 +43,15 @@ LOR_FILE = "data/HGMTPointVac_no_tof.lor"   # 6 float64 per event: x1 y1 z1 x2 y
 OUT_FILE = "data/image_fbp.voxels"
 DTYPE = np.float64                   # must match how you wrote the file (double -> float64)
 
-# Reconstruction grid (mm)
-# For PSF debugging, use R_IMG=5..10 mm. Later you can increase to 50 mm.
-R_IMG = 10     # transverse half-FOV (mm). Reconstruct x,y in [-R_IMG, +R_IMG]
-DX = 0.05        # pixel size (mm) in x/y
+# Reconstruction grid (cm)
+# For PSF debugging, use R_IMG=5..10 cm. Later you can increase to 50 mm.
+R_IMG = 2     # transverse half-FOV (cm). Reconstruct x,y in [-R_IMG, +R_IMG]
+DX = 0.03       # pixel size (cm) in x/y
 
-# Axial slab (mm) to reconstruct (you can keep small for point source)
-Z_MIN = -10.0
-Z_MAX =  10.0
-DZ = 0.5
+# Axial slab (cm) to reconstruct (you can keep small for point source)
+Z_MIN = -0.05
+Z_MAX =  0.05
+DZ = 0.1
 
 # Sinogram sampling
 N_PHI = 360      # angles in [0, pi). 180 is a good start; 360 is ok once stable.

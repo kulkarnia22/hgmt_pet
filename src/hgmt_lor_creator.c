@@ -84,6 +84,7 @@ FILE *first_scatter_layers;
 FILE *first_scatter_detected_layers;
 FILE *angle_inside_pore;
 FILE *lor_file_no_tof;
+FILE *collinearity_angles;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -182,6 +183,10 @@ lor create_lor(primitive_lor *prim_lor) {
 
   lor new_lor;
   new_lor.center = annihilation_loc;
+  //will add the non collinearity here
+  vec3d u = vec_norm(vec_sub(prim_lor->hit2.position, prim_lor->hit1.position));
+  sym_matrix transverse_projector = sym_add(sym_id(1.0), sym_scale(sym_proj(u), -1));
+  sym_matrix nc_cov = sym_scale(transverse_projector, NONCOLLINEARITY_VARIANCE);
   new_lor.covariance =
       sym_scale(sym_add(hit_covariance(prim_lor->hit1.position),
                         hit_covariance(prim_lor->hit2.position)),
@@ -189,7 +194,11 @@ lor create_lor(primitive_lor *prim_lor) {
   new_lor.covariance =
       sym_add(new_lor.covariance,
               sym_scale(sym_proj(c_hat), 0.5 * SPD_LGHT * SPD_LGHT * TIME_VAR));
-  new_lor.covariance = sym_add(new_lor.covariance, sym_id(DIFFUSION_VARIANCE));
+  //new_lor.covariance = sym_add(new_lor.covariance, sym_id(DIFFUSION_VARIANCE));
+  if (NONCOLLINEARITY){
+    new_lor.covariance = sym_add(new_lor.covariance, nc_cov);
+  }
+  //double max_eigen_val = sym_max_eigenvalue(nc_cov);
   return new_lor;
 }
 
@@ -351,6 +360,21 @@ void *worker(void *arg) {
     if (!worked)
       return NULL;
     //hit_split split = create_hit_split(annihil.hits, annihil.num_hits);
+    //will check for non collinearity here
+            //checking collinearity of hits
+    if(annihil.photon1.num_events > 0 && annihil.photon2.num_events > 0){
+        vec3d dir1 = annihil.photon1.events[0]->parent_gamma_dir;
+        vec3d dir2 = annihil.photon2.events[0]->parent_gamma_dir;
+        //printf("dir1 = (%f, %f, %f)\n", dir1.x, dir1.y, dir1.z);
+        //printf("dir2 = (%f, %f, %f)\n", dir2.x, dir2.y, dir2.z);
+        double cos_theta = vec_dot(dir1, dir2)/(vec_mag(dir1)*vec_mag(dir2));
+        if(cos_theta > 1) cos_theta = 1;
+        if(cos_theta < -1) cos_theta = -1;
+        double angle = acos(cos_theta);
+        angle = angle*180/PI;
+        //printf("angle = %f\n", angle);
+        fwrite(&angle, sizeof(double), 1, collinearity_angles);
+    }
     hit_split split;
     split.num_hits1 = annihil.photon1.num_hits;
     split.num_hits2 = annihil.photon2.num_hits;
@@ -487,11 +511,15 @@ void *worker(void *arg) {
         uint second_num = context.prim_lor->hit2.source->number;
         uint first_id = context.prim_lor->hit1.source->detector_id;
         uint second_id = context.prim_lor->hit2.source->detector_id;
+
         //printf("check = %i\n", second_id);
         fwrite(&first_id, sizeof(int), 1, lor_layer_decomp);
         fwrite(&second_id, sizeof(int), 1, lor_layer_decomp);
         fwrite(&first_num, sizeof(int), 1, lor_config_output);
         fwrite(&second_num, sizeof(int), 1, lor_config_output);
+        if(NONCOLLINEARITY){
+            non_col_correction(&context.prim_lor->hit1.position, &context.prim_lor->hit2.position);
+        }
         print_vec(context.prim_lor->hit1.position, lor_file_no_tof);
         print_vec(context.prim_lor->hit2.position, lor_file_no_tof);
         print_lor(&new_lor, lor_output);
@@ -622,7 +650,12 @@ int main(int argc, char **argv) {
   // opens up a .lor file to output each LOR into
   // can change HGMTDerenzo.lor to HGMTPoint.lor and vice versa
 
-  
+  //opens up file for collinearity check
+  char *collinearity_angles_loc;
+  asprintf(&collinearity_angles_loc, "%scollinearity_angles.data", args[2]);
+  collinearity_angles = fopen(collinearity_angles_loc, "wb");
+  free(collinearity_angles_loc);
+
   //opening up file for pores crossed
   char *pores_crossed_loc;
   asprintf(&pores_crossed_loc, "%snum_pores_crossed.data", args[2]);
@@ -885,6 +918,9 @@ int main(int argc, char **argv) {
   }
   if(lor_file_no_tof != NULL){
     fclose(lor_file_no_tof);
+  }
+  if(collinearity_angles != NULL){
+    fclose(collinearity_angles);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

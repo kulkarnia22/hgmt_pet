@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b)) 
 // gives a random number following a guassian distribution
 typedef struct perm_ {
   uint *perm;
@@ -33,4 +33,5 @@ void add_to_histogram(double value, histogram *hist);
 double linear_interpolation(double nums[COLS], double min, double max,
                             double value);
 void print_histogram(histogram *hist);
+void non_col_correction(vec3d *hit1_pos, vec3d *hit2_pos);
 #endif

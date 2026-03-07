@@ -19,7 +19,10 @@ extern int count1;
 #define TIME_UNC 0.1        // ns 1 inch over sqrt(12)
 #define DETECTOR_THICKNESS 2.54
 #define DETECTOR_SEGMENTATION 1
-#define DIFFUSION_VARIANCE 0.00022
+#define NONCOLLINEARITY 1 
+#define NONCOLLINEARITY_UNC 0.084 //cm
+#define NONCOLLINEARITY_VARIANCE 0.0071 //cm^2
+#define DIFFUSION_VARIANCE 0.0071 //0.00022
 #define E_MAX 520.0
 #define E_MIN 0.0
 #define PI 3.141592653589793

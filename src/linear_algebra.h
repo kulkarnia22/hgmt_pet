@@ -2,6 +2,7 @@
 #define linear_algebra_h
 #include <stdbool.h>
 #include <stdio.h>
+#define PI 3.141592653589793
 
 typedef struct vec3d {
   double x, y, z;

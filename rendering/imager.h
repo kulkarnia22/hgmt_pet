@@ -7,11 +7,11 @@
 #include "../src/helper_functions.h"
 #include "../src/hgmt_structs.h"
 #include "../src/linear_algebra.h"
-#define X_LENGTH 10.0
-#define Y_LENGTH 10.0
+#define X_LENGTH 3.0
+#define Y_LENGTH 3.0
 #define Z_LENGTH 4.0
-#define X_RES 500
-#define Y_RES 500
+#define X_RES 100
+#define Y_RES 100
 #define Z_RES 1
 #define RES (X_RES * Y_RES * Z_RES)
 typedef struct grid {
