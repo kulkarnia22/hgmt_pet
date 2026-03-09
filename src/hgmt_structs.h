@@ -13,7 +13,7 @@ extern int count1;
 #define KAPTON_RHO_G_CM3 1.42
 #define SPD_LGHT 29.9792458 // cm/ns
 #define REST_ENERGY 511.0   // KeV
-#define LONG_UNC 0.04        // cm
+#define LONG_UNC 0.03        // cm
 #define CIRC_UNC 0.03        // cm
 #define RAD_UNC 0.73         // cm
 #define TIME_UNC 0.1        // ns 1 inch over sqrt(12)

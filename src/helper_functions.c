@@ -18,7 +18,9 @@ double gaussian(double sd) {
 
   if (!seeded) {
     // Use a unique seed per thread: combine time and thread id
-    srand48_r(time(NULL) ^ (intptr_t)pthread_self(), &rand_buf);
+    //srand48_r(time(NULL) ^ (intptr_t)pthread_self(), &rand_buf);
+    // Fixed seed for reproducibility
+    srand48_r(12345, &rand_buf);
     seeded = 1;
   }
 
