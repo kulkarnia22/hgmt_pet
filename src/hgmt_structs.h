@@ -13,13 +13,13 @@ extern int count1;
 #define KAPTON_RHO_G_CM3 1.42
 #define SPD_LGHT 29.9792458 // cm/ns
 #define REST_ENERGY 511.0   // KeV
-#define LONG_UNC 0.07        // cm
-#define CIRC_UNC 0.07        // cm
-#define RAD_UNC 0.73         // cm
+#define LONG_UNC 0.07014         // cm
+#define CIRC_UNC 0.0989        // cm
+#define RAD_UNC 0.01 //0.73         // cm
 #define TIME_UNC 0.1        // ns 1 inch over sqrt(12)
 #define DETECTOR_THICKNESS 2.54
 #define DETECTOR_SEGMENTATION 0
-#define HITINPORE 1
+#define HITINPORE 0
 #define NONCOLLINEARITY 0 
 #define NONCOLLINEARITY_UNC 0.084 //cm
 #define NONCOLLINEARITY_VARIANCE 0.0071 //cm^2

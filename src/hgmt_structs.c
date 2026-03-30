@@ -21,6 +21,12 @@ hit event_to_hit(event *single_event) {
   }
   else{
     new_hit.position = single_event->position;
+    if(DETECTOR_SEGMENTATION){
+        double R_scatter = radial_dist(new_hit.position);
+        new_hit.position = radial_scale(
+            new_hit.position, (detector_positions[single_event->detector_id] +
+                           DETECTOR_THICKNESS / 2)/R_scatter);
+    }
   }
   vec3d r_hat = vec_norm(
         three_vec(new_hit.position.x, new_hit.position.y, 0));
