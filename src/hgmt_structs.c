@@ -13,42 +13,27 @@
 #include "pore_geometry.h"
 
 hit event_to_hit(event *single_event) {
-  vec_mag(three_vec(single_event->position.x, single_event->position.y, 0.0));
   hit new_hit;
   new_hit.source = single_event;
   vec3d z_hat = three_vec(0.0, 0.0, 1.0);
-  vec3d circ_hat = vec_norm(vec_cross(z_hat, single_event->position));
-  /*new_hit.position =
-      vec_add(single_event->position, vec_scale(z_hat, gaussian(LONG_UNC)));*/
-  new_hit.position = single_event->position;
+  if(HITINPORE){
+    get_pore_coords(&new_hit);
+  }
+  else{
+    new_hit.position = single_event->position;
+  }
+  vec3d r_hat = vec_norm(
+        three_vec(new_hit.position.x, new_hit.position.y, 0));
+  vec3d rad_offset = vec_scale(r_hat, gaussian(RAD_UNC));
+  new_hit.position = vec_add(new_hit.position, rad_offset);
+  vec3d circ_hat = vec_norm(vec_cross(z_hat, new_hit.position));
   vec3d offset = vec_add(vec_scale(z_hat, gaussian(LONG_UNC)),
                          vec_scale(circ_hat, gaussian(CIRC_UNC)));
-  new_hit.position = vec_add(new_hit.position, offset);
-  if (DETECTOR_SEGMENTATION) {
-    // we move the radial component to the midpoint of the detector which it hit
-    double rad_dist = radial_dist(single_event->position);
-    /*single_event->position = radial_scale(
-        single_event->position, (detector_positions[single_event->detector_id] +
-                                 DETECTOR_THICKNESS / 2) /
-                                    rad_dist);*/
-    new_hit.position = radial_scale(
-        new_hit.position, (detector_positions[single_event->detector_id] +
-                           DETECTOR_THICKNESS / 2)/rad_dist);
-    vec3d r_hat = vec_norm(
-        three_vec(single_event->position.x, single_event->position.y, 0));
-    vec3d rad_offset = vec_scale(r_hat, gaussian(RAD_UNC));
-    new_hit.position = vec_add(single_event->position, rad_offset);
-  } else {
-    vec3d r_hat = vec_norm(
-        three_vec(single_event->position.x, single_event->position.y, 0));
-    //offset = vec_add(offset, vec_scale(r_hat, gaussian(RAD_UNC))); should be added already
-    vec3d rad_offset = vec_scale(r_hat, gaussian(RAD_UNC));
-    new_hit.position = vec_add(single_event->position, rad_offset);
-  }
+  new_hit.position = vec_add(new_hit.position, offset);  
   new_hit.tof = single_event->tof + gaussian(TIME_UNC);
-  //new_hit.position = vec_add(single_event->position, offset);
   return new_hit;
 }
+
 bool is_detected(event *single_event, double eff_by_energy[COLS]) {
   /*if (single_event->energy > 250){
     printf("Energy: %.3f\n", single_event->energy);
@@ -88,6 +73,7 @@ bool plane_crossingv2(event *single_event){
     int i = pg_nearest_int((R_scatter*phi_scatter)/(tau + alpha));//index of nearest pore
 
     double pitch_phi = (tau + alpha) / R_scatter;
+    //double max_phi_diff = (tau + 0.5*alpha)/R_scatter;
     double phi_pore = i * pitch_phi;     // unwrapped
     // check if scatter starts inside the pore (vacuum gap) -> exclude
     double dphi_min = wrap_pi(phi_scatter - wrap_2pi(phi_pore));  // minimum signed diff in [-pi,pi]
@@ -129,6 +115,75 @@ bool plane_crossingv2(event *single_event){
     if (dphi_to_entrance < 0) dphi_to_entrance = 0;
 
     return (dphi_total >= dphi_to_entrance);
+}
+
+void get_pore_coords(hit *single_hit){
+    event *single_event = single_hit->source;
+    vec3d scatter_pos = vec_scale(single_event->position, 10);
+    vec3d u = vec_norm(single_event->direction);
+    double R_scatter = radial_dist(scatter_pos);
+    double phi_scatter = wrap_2pi(atan2(scatter_pos.y, scatter_pos.x));
+    double tau = um_to_mm(TAU);
+    double alpha = um_to_mm(ALPHA);
+    double gamma = um_to_mm(GAMMA);
+    double beta = um_to_mm(BETA);
+    int i = pg_nearest_int((R_scatter*phi_scatter)/(tau + alpha));//index of nearest pore
+
+    double pitch_phi = (tau + alpha) / R_scatter;
+    double phi_pore = i * pitch_phi;     // unwrapped
+
+    vec3d ephi = three_vec(-sin(phi_scatter), cos(phi_scatter), 0);
+    double uphi = vec_dot(u, ephi);
+    int dir = (uphi >= 0) ? +1 : -1;
+
+    double dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - phi_scatter)
+                                : wrap_2pi(phi_scatter - phi_pore);
+
+    if (dphi_fwd > 0.5 * pitch_phi) {
+        i += dir;
+        phi_pore = i * pitch_phi;
+        dphi_fwd = (dir > 0) ? wrap_2pi(phi_pore - phi_scatter)
+                            : wrap_2pi(phi_scatter - phi_pore);
+    }
+
+    //now I need to shift hit coords to radius and rotate to phi of pore
+    //first I'll rotate to phi center
+    vec3d pos_phi_update;
+    if (dir < 0){
+        pos_phi_update.x = scatter_pos.x*cos(dphi_fwd) + scatter_pos.y*sin(dphi_fwd);
+        pos_phi_update.y = -scatter_pos.x*sin(dphi_fwd) + scatter_pos.y*cos(dphi_fwd);
+    }
+    else if(dir > 0){
+        pos_phi_update.x = scatter_pos.x*cos(dphi_fwd) - scatter_pos.y*sin(dphi_fwd);
+        pos_phi_update.y = scatter_pos.x*sin(dphi_fwd) + scatter_pos.y*cos(dphi_fwd);
+    }
+    single_hit->position.x = pos_phi_update.x/10;
+    single_hit->position.y = pos_phi_update.y/10;
+    single_hit->position.z = scatter_pos.z/10;
+
+    //will probably get some errors. Now gonna scale to radial center
+    R_scatter = R_scatter/10;
+    single_hit->position = radial_scale(
+        single_hit->position, (detector_positions[single_event->detector_id] +
+                           DETECTOR_THICKNESS / 2)/R_scatter);
+
+    //next I just need to check if u.z is pos or neg and then find z coord by dz and beta + gamma(pore coord notation)
+    double dir_z = (u.z > 0) ? 1:-1;
+    int j = pg_nearest_int(scatter_pos.z/(beta + gamma));
+    double pore_z = j*(beta + gamma)/10;
+    if(pore_z > scatter_pos.z/10){
+        if(dir_z < 0){
+            j += dir_z;
+            pore_z = j*(beta + gamma)/10;
+        }
+    }
+    else if(pore_z < scatter_pos.z/10){
+        if(dir_z > 0){
+            j += dir_z;
+            pore_z = j*(beta + gamma)/10;
+        }
+    }
+    single_hit->position.z = pore_z;
 }
 
 int pores_crossed(event *first_hit){

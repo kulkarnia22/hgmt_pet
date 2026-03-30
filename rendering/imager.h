@@ -7,8 +7,8 @@
 #include "../src/helper_functions.h"
 #include "../src/hgmt_structs.h"
 #include "../src/linear_algebra.h"
-#define X_LENGTH 2.0 //cm
-#define Y_LENGTH 2.0 //cm
+#define X_LENGTH 10.0 //cm
+#define Y_LENGTH 10.0 //cm
 #define Z_LENGTH 4.0 //cm
 #define X_RES 100 //pixels
 #define Y_RES 100 //pixels

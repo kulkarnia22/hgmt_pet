@@ -39,14 +39,14 @@ import numpy as np
 # ===============================
 
 # Input / output
-LOR_FILE = "data/HGMTPointVacCenter_10cm_no_tof.lor"   # 6 float64 per event: x1 y1 z1 x2 y2 z2 (mm)
-OUT_FILE = "data/image_center_10cm_fbp.voxels"
+LOR_FILE = "data/HGMTPointVacCenter_no_tof.lor"   # 6 float64 per event: x1 y1 z1 x2 y2 z2 (mm)
+OUT_FILE = "data/image_fbp.voxels"
 DTYPE = np.float64                   # must match how you wrote the file (double -> float64)
 
 # Reconstruction grid (cm)
 # For PSF debugging, use R_IMG=5..10 cm. Later you can increase to 50 mm.
-R_IMG = 25     # transverse half-FOV (cm). Reconstruct x,y in [-R_IMG, +R_IMG]
-DX = 0.05       # pixel size (cm) in x/y
+R_IMG = 10     # transverse half-FOV (cm). Reconstruct x,y in [-R_IMG, +R_IMG]
+DX = 0.04       # pixel size (cm) in x/y
 
 # Axial slab (cm) to reconstruct (you can keep small for point source)
 Z_MIN = -0.05

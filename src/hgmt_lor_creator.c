@@ -94,10 +94,10 @@ pthread_mutex_t read_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t write_lock = PTHREAD_MUTEX_INITIALIZER;
 primitive_lor create_prim_lor(hit_split split) {
   primitive_lor prim_lor;
-  // hit *hit1 = initial_by_neural_network(split.hits1, split.num_hits1);
-  // hit *hit2 = initial_by_neural_network(split.hits2, split.num_hits2);
-  // hit *hit1 = initial_by_truth(split.hits1, split.num_hits1);
-  // hit *hit2 = initial_by_truth(split.hits2, split.num_hits2);
+  //hit *hit1 = initial_by_neural_network(split.hits1, split.num_hits1);
+  //hit *hit2 = initial_by_neural_network(split.hits2, split.num_hits2);
+  //hit *hit1 = initial_by_truth(split.hits1, split.num_hits1);
+  //hit *hit2 = initial_by_truth(split.hits2, split.num_hits2);
   hit *hit1 = initial_by_least_time(split.hits1, split.num_hits1);
   hit *hit2 = initial_by_least_time(split.hits2, split.num_hits2);
   //hit *hit1 = initial_by_truth(split.hits1, split.num_hits1);
@@ -349,7 +349,7 @@ void debug_all(debug_context context) {
   }
 }
 void *worker(void *arg) {
-  printf("TIME_UNC = %f", TIME_UNC);
+  //printf("TIME_UNC = %f", TIME_UNC);
   annihilation annihil;
   while (true) {
     pthread_mutex_lock(&read_lock);
@@ -755,12 +755,12 @@ int main(int argc, char **argv) {
 
   if (writing_to_lor) {
     char *lor_file_loc;
-    asprintf(&lor_file_loc, "%sHGMTPointVacCenter20cm.lor", args[2]);
+    asprintf(&lor_file_loc, "%sHGMTMiniDerenzo.lor", args[2]);
     lor_output = fopen(lor_file_loc, "wb");
     free(lor_file_loc);
 
     char *lor_no_tof_file_loc;
-    asprintf(&lor_no_tof_file_loc, "%sHGMTPointVacCenter_20cm_no_tof.lor", args[2]);
+    asprintf(&lor_no_tof_file_loc, "%sHGMTMiniDerenzo_no_tof.lor", args[2]);
     lor_file_no_tof = fopen(lor_no_tof_file_loc, "wb");
     free(lor_no_tof_file_loc);
   }

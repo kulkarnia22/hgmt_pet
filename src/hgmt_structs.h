@@ -13,13 +13,14 @@ extern int count1;
 #define KAPTON_RHO_G_CM3 1.42
 #define SPD_LGHT 29.9792458 // cm/ns
 #define REST_ENERGY 511.0   // KeV
-#define LONG_UNC 0.03        // cm
-#define CIRC_UNC 0.03        // cm
+#define LONG_UNC 0.07        // cm
+#define CIRC_UNC 0.07        // cm
 #define RAD_UNC 0.73         // cm
 #define TIME_UNC 0.1        // ns 1 inch over sqrt(12)
 #define DETECTOR_THICKNESS 2.54
-#define DETECTOR_SEGMENTATION 1
-#define NONCOLLINEARITY 1 
+#define DETECTOR_SEGMENTATION 0
+#define HITINPORE 1
+#define NONCOLLINEARITY 0 
 #define NONCOLLINEARITY_UNC 0.084 //cm
 #define NONCOLLINEARITY_VARIANCE 0.0071 //cm^2
 #define DIFFUSION_VARIANCE 0.0071 //0.00022
@@ -87,6 +88,7 @@ bool is_detected(event *single_event, double eff_by_energy[COLS]);
 bool is_detected_geom(event *single_event);
 bool plane_crossing(event *single_event);
 bool plane_crossingv2(event *single_event);
+void get_pore_coords(hit *single_hit);
 int get_detector(vec3d position);
 int pores_crossed(event *single_event);
 double min_energy(event *single_event, int num_crosses);
