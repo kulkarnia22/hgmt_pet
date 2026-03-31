@@ -755,12 +755,12 @@ int main(int argc, char **argv) {
 
   if (writing_to_lor) {
     char *lor_file_loc;
-    asprintf(&lor_file_loc, "%sHGMTMiniDerenzo.lor", args[2]);
+    asprintf(&lor_file_loc, "%sHGMT_NEMA_IQ.lor", args[2]);
     lor_output = fopen(lor_file_loc, "wb");
     free(lor_file_loc);
 
     char *lor_no_tof_file_loc;
-    asprintf(&lor_no_tof_file_loc, "%sHGMTMiniDerenzo_no_tof.lor", args[2]);
+    asprintf(&lor_no_tof_file_loc, "%sHGMT_NEMA_IQ_no_tof.lor", args[2]);
     lor_file_no_tof = fopen(lor_no_tof_file_loc, "wb");
     free(lor_no_tof_file_loc);
   }

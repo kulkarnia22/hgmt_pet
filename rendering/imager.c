@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
   //printf("here");
   lor_file = fopen(args[0], "rb");
   char *filename;
-  asprintf(&filename, "%simage_mini_derenzo.voxels", args[1]);
+  asprintf(&filename, "%simage_NEMA_IQ.voxels", args[1]);
   output = fopen(filename, "wb");
   free(filename);
   grid cells = {0};
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
   uint num_lors = 0;
   uint num_comps = 0;
   printf("First pass, creating heatmap as first guess...\n");
-  printf("X_LENGTH = %f\n", X_LENGTH);
+  //printf("X_LENGTH = %f\n", X_LENGTH);
   printf("Y_LENGTH = %f\n", Y_LENGTH);
   printf("X_RES = %d\n", X_RES);
   printf("Y_RES = %d\n", Y_RES);
