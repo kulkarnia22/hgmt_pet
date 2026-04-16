@@ -26,6 +26,7 @@ extern int count1;
 #define DIFFUSION_VARIANCE 0.0071 //0.00022
 #define E_MAX 520.0
 #define E_MIN 0.0
+#define SCATTER_REJECTION_FRACTION 0.1
 #define PI 3.141592653589793
 #define ME_C2_KEV 510.99895  // electron rest energy (keV)
 typedef unsigned int uint;

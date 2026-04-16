@@ -1,0 +1,16 @@
+nohup: ignoring input
+First pass, creating heatmap as first guess...
+X_RES = 350 | Y_RES = 350 | Z_RES = 10
+X_LENGTH = 35.0 | Y_LENGTH = 35.0 | Z_LENGTH = 10.0 cm
+Total LORs: 24397292 | In-bounds: 7648765
+Initializing threads...
+Starting convergence loop...
+
+Iteration 1/5 | Change (MAE): 2.331431e-01 | Background: 6.069562e-02
+Iteration 2/5 | Change (MAE): 1.168244e-01 | Background: 6.353568e-02
+Iteration 3/5 | Change (MAE): 6.312474e-02 | Background: 6.368070e-02
+Iteration 4/5 | Change (MAE): 3.621847e-02 | Background: 6.371415e-02
+Iteration 5/5 | Change (MAE): 2.200296e-02 | Background: 6.373483e-02
+
+--- Run Finished ---
+Final image data saved.

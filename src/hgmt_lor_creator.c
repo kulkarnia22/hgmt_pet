@@ -19,6 +19,7 @@ double energies_keV[RANGE_COLS];
 double ranges_mm[RANGE_COLS]; 
 // params
 bool writing_to_lor = true;
+bool fbp = false;
 uint vis_events = 0;
 uint counter = 0;
 uint hit_first_counter = 0;
@@ -426,9 +427,26 @@ void *worker(void *arg) {
     debug_context context = {0};
     context.annihil = &annihil;
     context.split = &split;
+    // Check for inpatient scattering on either photon
+    bool photon1_inpatient = 
+        annihil.photon1.num_events > 0 &&
+        annihil.photon1.events[0]->detector_id == -1;
+    bool photon2_inpatient = 
+        annihil.photon2.num_events > 0 &&
+        annihil.photon2.events[0]->detector_id == -1;
+    bool is_scattered = photon1_inpatient || photon2_inpatient;
+
+    // Randomly discard scattered events
+    bool reject = false;
+    if (is_scattered) {
+        double r = (double)rand() / RAND_MAX;
+        if (r < SCATTER_REJECTION_FRACTION) {
+            reject = true;
+        }
+    }
     primitive_lor prim_lor;
     lor new_lor;
-    if (split.num_hits1 >= 1 && split.num_hits2 >= 1) { 
+    if (!reject && split.num_hits1 >= 1 && split.num_hits2 >= 1) { 
       lor_count ++;
       prim_lor = create_prim_lor(split);
       new_lor = create_lor(&prim_lor);
@@ -755,12 +773,12 @@ int main(int argc, char **argv) {
 
   if (writing_to_lor) {
     char *lor_file_loc;
-    asprintf(&lor_file_loc, "%sHGMT_NEMA_IQ.lor", args[2]);
+    asprintf(&lor_file_loc, "%sHGMTNEMAIQ2nd100.lor", args[2]);
     lor_output = fopen(lor_file_loc, "wb");
     free(lor_file_loc);
 
     char *lor_no_tof_file_loc;
-    asprintf(&lor_no_tof_file_loc, "%sHGMT_NEMA_IQ_no_tof.lor", args[2]);
+    asprintf(&lor_no_tof_file_loc, "%sHGMTNEMAIQ_no_tof.lor", args[2]);
     lor_file_no_tof = fopen(lor_no_tof_file_loc, "wb");
     free(lor_no_tof_file_loc);
   }
