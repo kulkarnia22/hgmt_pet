@@ -69,9 +69,9 @@ static inline double wrap_2pi(double phi)
 }
 
 bool plane_crossingv2(event *single_event){
-    if (single_event -> detector_id == -1){
+    /*if (single_event -> detector_id == -1){
         return 0 ;
-    }
+    }*/
     vec3d scatter_pos = vec_scale(single_event->position, 10);
     //vec3d scatter_pos = single_event->position;
     vec3d u = vec_norm(single_event->direction);
@@ -313,7 +313,7 @@ double min_energy(event *first_hit, int num_crosses){
     int num_pores = num_crosses - 1;
     double phi_per_pore = dir * (tau/hit_R);
     double t_old = t;
-    if (t < 0){
+    /*if (t < 0){
         printf("event detected?: %d\n", first_hit->detected);
         printf("s_max_mm: %f\n", s_max_mm);
         printf("initial pos pi: (%f, %f, %f)\n", hit_pos.x, hit_pos.y, hit_pos.z);
@@ -322,14 +322,14 @@ double min_energy(event *first_hit, int num_crosses){
         printf("phi_pore: %f\n", phi_pore);
         printf("num pores crossed: %u\n", num_pores);
         printf("t_first value: %f\n\n", t);
-    }
+    }*/
     for (int i = 0; i < num_pores; i ++){
         phi_prime += phi_per_pore;
         //phi_prime = wrap_pi(phi_prime);
         t = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime)) - t_old;
         new_range -= t;
         t_old = (hit_pos.x*sin(phi_prime) - hit_pos.y*cos(phi_prime))/(u.y*cos(phi_prime) - u.x*sin(phi_prime));
-        if (t < 0){
+        /*if (t < 0){
             printf("event detected?: %d\n", first_hit->detected);
             printf("s_max_mm: %f\n", s_max_mm);
             printf("initial pos pi: (%f, %f, %f)\n", hit_pos.x, hit_pos.y, hit_pos.z);
@@ -338,7 +338,7 @@ double min_energy(event *first_hit, int num_crosses){
             printf("phi_pore: %f\n", phi_pore);
             printf("num pores crossed: %u\n", num_pores);
             printf("t value: %f\n\n", t);
-        }
+        }*/
         //small cases where t is negative. will have to work through that. That doesn't make any sense tbh.
         //min_energy -= pg_kapton_energy_keV(new_range);
         min_energy = pg_kapton_energy_keV(new_range);

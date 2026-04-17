@@ -86,6 +86,8 @@ FILE *first_scatter_detected_layers;
 FILE *angle_inside_pore;
 FILE *lor_file_no_tof;
 FILE *collinearity_angles;
+FILE *scattered_tof;
+FILE *non_scattered_tof;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -437,16 +439,16 @@ void *worker(void *arg) {
     bool is_scattered = photon1_inpatient || photon2_inpatient;
 
     // Randomly discard scattered events
-    bool reject = false;
+    /*bool reject = false;
     if (is_scattered) {
         double r = (double)rand() / RAND_MAX;
         if (r < SCATTER_REJECTION_FRACTION) {
             reject = true;
         }
-    }
+    }*/
     primitive_lor prim_lor;
     lor new_lor;
-    if (!reject && split.num_hits1 >= 1 && split.num_hits2 >= 1) { 
+    if (split.num_hits1 >= 1 && split.num_hits2 >= 1) { 
       lor_count ++;
       prim_lor = create_prim_lor(split);
       new_lor = create_lor(&prim_lor);
@@ -530,6 +532,17 @@ void *worker(void *arg) {
         uint second_num = context.prim_lor->hit2.source->number;
         uint first_id = context.prim_lor->hit1.source->detector_id;
         uint second_id = context.prim_lor->hit2.source->detector_id;
+
+        //checking tof dist of scatters
+        double tof1 = context.prim_lor->hit1.tof;
+        double tof2 = context.prim_lor->hit2.tof;
+        double tof_diff = tof1 - tof2;
+        if(is_scattered){
+            fwrite(&tof_diff, sizeof(double), 1, scattered_tof);
+        }
+        else{
+            fwrite(&tof_diff, sizeof(double), 1, non_scattered_tof);
+        }
 
         //printf("check = %i\n", second_id);
         fwrite(&first_id, sizeof(int), 1, lor_layer_decomp);
@@ -771,6 +784,15 @@ int main(int argc, char **argv) {
   incoming_photons_sixthscattered = fopen(incoming_photon_sixth, "wb");
   free(incoming_photon_sixth);
 
+  //opening scatter tof files
+  char *scattered_tof_loc;
+  asprintf(&scattered_tof_loc, "%sscattered_tof.data", args[2]);
+  scattered_tof = fopen(scattered_tof_loc, "wb");
+
+  char *non_scattered_tof_loc;
+  asprintf(&non_scattered_tof_loc, "%snon_scattered_tof.data", args[2]);
+  non_scattered_tof = fopen(non_scattered_tof_loc, "wb");
+
   if (writing_to_lor) {
     char *lor_file_loc;
     asprintf(&lor_file_loc, "%sHGMTNEMAIQ2nd100.lor", args[2]);
@@ -940,6 +962,12 @@ int main(int argc, char **argv) {
   }
   if(collinearity_angles != NULL){
     fclose(collinearity_angles);
+  }
+  if(scattered_tof != NULL){
+    fclose(scattered_tof);
+  }
+  if(non_scattered_tof != NULL){
+    fclose(non_scattered_tof);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);
