@@ -505,7 +505,7 @@ int main(int argc, char **argv) {
  
   lor_file = fopen(args[0], "rb");
   char *filename;
-  asprintf(&filename, "%simage_NEMA_IQ_200.voxels", args[1]);
+  asprintf(&filename, "%simage_mini_derenzo_bad.voxels", args[1]);
   output = fopen(filename, "wb");
   free(filename);
  

@@ -69,9 +69,9 @@ static inline double wrap_2pi(double phi)
 }
 
 bool plane_crossingv2(event *single_event){
-    /*if (single_event -> detector_id == -1){
+    if (single_event -> detector_id == -1){
         return 0 ;
-    }*/
+    }
     vec3d scatter_pos = vec_scale(single_event->position, 10);
     //vec3d scatter_pos = single_event->position;
     vec3d u = vec_norm(single_event->direction);

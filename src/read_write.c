@@ -21,6 +21,18 @@ void read_event(event *new_event, FILE *source, double eff_by_energy[COLS]) {
   //printf("detected = %d\n\n", new_event->detected);
 }
 
+bool read_nema_lor(nema_lor *new_nema_lor, FILE *source){
+    if (!read_vec(&new_nema_lor->pos1, source)) return false;
+    if (!read_vec(&new_nema_lor->pos2, source)) return false;
+
+    if (fread(&new_nema_lor->tof1, sizeof(double), 1, source) != 1)
+        return false;
+    if (fread(&new_nema_lor->tof2, sizeof(double), 1, source) != 1)
+        return false;
+
+    return true;
+}
+
 bool read_annihilation(annihilation *annihil, FILE *source,
                        double eff_by_energy[COLS]) {
   *annihil = (annihilation){0};

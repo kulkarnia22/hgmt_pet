@@ -88,6 +88,8 @@ FILE *lor_file_no_tof;
 FILE *collinearity_angles;
 FILE *scattered_tof;
 FILE *non_scattered_tof;
+FILE *scattered_impact;
+FILE *non_scattered_impact;
 //FILE *angular_output;
 //FILE *det_angle;
 //FILE *energy_dist;
@@ -205,6 +207,17 @@ lor create_lor(primitive_lor *prim_lor) {
   return new_lor;
 }
 
+bool is_scattered(annihilation *annihil){
+    bool photon1_inpatient = 
+        annihil->photon1.num_events > 0 &&
+        annihil->photon1.events[0]->detector_id == -1;
+    bool photon2_inpatient = 
+        annihil->photon2.num_events > 0 &&
+        annihil->photon2.events[0]->detector_id == -1;
+    bool scattered = photon1_inpatient || photon2_inpatient;
+    return scattered;
+}
+
 // provide debug statistics
 int debug_path(photon_path *path, debug_context context) {
   if (path->num_events == 0)
@@ -315,8 +328,10 @@ int debug_annihilation(debug_context context) {
           print_int(j + 1, debug[4]);
           print_int(i + 1, debug[4]);
         }
-        print_double(impact_parameter(loc1, loc2, tof1, tof2, true_center),
+        double impact = impact_parameter(loc1, loc2, tof1, tof2, true_center);
+        print_double(impact,
                      debug[4]);
+        //coming back here
       }
     int separator = -1;
     fwrite(&separator, sizeof(int), 1, debug[4]);
@@ -429,14 +444,6 @@ void *worker(void *arg) {
     debug_context context = {0};
     context.annihil = &annihil;
     context.split = &split;
-    // Check for inpatient scattering on either photon
-    bool photon1_inpatient = 
-        annihil.photon1.num_events > 0 &&
-        annihil.photon1.events[0]->detector_id == -1;
-    bool photon2_inpatient = 
-        annihil.photon2.num_events > 0 &&
-        annihil.photon2.events[0]->detector_id == -1;
-    bool is_scattered = photon1_inpatient || photon2_inpatient;
 
     // Randomly discard scattered events
     /*bool reject = false;
@@ -454,6 +461,22 @@ void *worker(void *arg) {
       new_lor = create_lor(&prim_lor);
       context.prim_lor = &prim_lor;
       context.lor = &new_lor;
+      bool scattered = is_scattered(&annihil);
+      vec3d loc1 = prim_lor.hit1.position;
+      vec3d loc2 = prim_lor.hit2.position;
+      double tof1 = prim_lor.hit1.tof;
+      double tof2 = prim_lor.hit2.tof;
+      double tof_diff = tof1 - tof2;
+      vec3d true_center = annihil.center;
+      double impact = impact_parameter(loc1, loc2, tof1, tof2, true_center);
+      if(scattered){
+        print_double(impact, scattered_impact);
+        print_double(tof_diff, scattered_tof);
+      }
+      else{
+        print_double(impact, non_scattered_impact);
+        print_double(tof_diff, non_scattered_tof);
+      }
     }
     pthread_mutex_lock(&write_lock);
     debug_all(context);
@@ -532,17 +555,6 @@ void *worker(void *arg) {
         uint second_num = context.prim_lor->hit2.source->number;
         uint first_id = context.prim_lor->hit1.source->detector_id;
         uint second_id = context.prim_lor->hit2.source->detector_id;
-
-        //checking tof dist of scatters
-        double tof1 = context.prim_lor->hit1.tof;
-        double tof2 = context.prim_lor->hit2.tof;
-        double tof_diff = tof1 - tof2;
-        if(is_scattered){
-            fwrite(&tof_diff, sizeof(double), 1, scattered_tof);
-        }
-        else{
-            fwrite(&tof_diff, sizeof(double), 1, non_scattered_tof);
-        }
 
         //printf("check = %i\n", second_id);
         fwrite(&first_id, sizeof(int), 1, lor_layer_decomp);
@@ -682,6 +694,16 @@ int main(int argc, char **argv) {
   // opens up a .lor file to output each LOR into
   // can change HGMTDerenzo.lor to HGMTPoint.lor and vice versa
 
+  char *scattered_impact_loc;
+  asprintf(&scattered_impact_loc, "%sscattered_impact_param.data", args[2]);
+  scattered_impact = fopen(scattered_impact_loc, "wb");
+  free(scattered_impact_loc);
+
+  char *non_scattered_impact_loc;
+  asprintf(&non_scattered_impact_loc, "%snon_scattered_impact_param.data", args[2]);
+  non_scattered_impact = fopen(non_scattered_impact_loc, "wb");
+  free(non_scattered_impact_loc);
+
   //opens up file for collinearity check
   char *collinearity_angles_loc;
   asprintf(&collinearity_angles_loc, "%scollinearity_angles.data", args[2]);
@@ -795,12 +817,12 @@ int main(int argc, char **argv) {
 
   if (writing_to_lor) {
     char *lor_file_loc;
-    asprintf(&lor_file_loc, "%sHGMTNEMAIQ2nd100.lor", args[2]);
+    asprintf(&lor_file_loc, "%sHGMTMiniDerenzoBad.lor", args[2]);
     lor_output = fopen(lor_file_loc, "wb");
     free(lor_file_loc);
 
     char *lor_no_tof_file_loc;
-    asprintf(&lor_no_tof_file_loc, "%sHGMTNEMAIQ_no_tof.lor", args[2]);
+    asprintf(&lor_no_tof_file_loc, "%sHGMTPointVac_no_tof.lor", args[2]);
     lor_file_no_tof = fopen(lor_no_tof_file_loc, "wb");
     free(lor_no_tof_file_loc);
   }
@@ -968,6 +990,12 @@ int main(int argc, char **argv) {
   }
   if(non_scattered_tof != NULL){
     fclose(non_scattered_tof);
+  }
+  if(scattered_impact != NULL){
+    fclose(scattered_impact);
+  }
+  if(non_scattered_impact != NULL){
+    fclose(non_scattered_impact);
   }
   /*if (angular_output != NULL){
     fclose(angular_output);

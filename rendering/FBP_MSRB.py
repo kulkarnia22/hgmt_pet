@@ -39,14 +39,14 @@ import numpy as np
 # ===============================
 
 # Input / output
-LOR_FILE = "data/HGMTPointVacCenter_no_tof.lor"   # 6 float64 per event: x1 y1 z1 x2 y2 z2 (mm)
+LOR_FILE = "data/HGMTPointVac_no_tof.lor"   # 6 float64 per event: x1 y1 z1 x2 y2 z2 (mm)
 OUT_FILE = "data/image_fbp.voxels"
 DTYPE = np.float64                   # must match how you wrote the file (double -> float64)
 
 # Reconstruction grid (cm)
 # For PSF debugging, use R_IMG=5..10 cm. Later you can increase to 50 mm.
 R_IMG = 10     # transverse half-FOV (cm). Reconstruct x,y in [-R_IMG, +R_IMG]
-DX = 0.04       # pixel size (cm) in x/y
+DX = 0.03       # pixel size (cm) in x/y
 
 # Axial slab (cm) to reconstruct (you can keep small for point source)
 Z_MIN = -0.05
@@ -59,7 +59,7 @@ DS = DX          # s-bin spacing (mm)
 S_MAX = 2*R_IMG    # max |s| (mm) for sinogram
 
 # "Manual MSRB" parameters (continuous-z)
-MSRB_HALF_SLICES = 2          # each LOR contributes to k0-MS..k0+MS (so 2 => 5 slices)
+MSRB_HALF_SLICES = 0          # each LOR contributes to k0-MS..k0+MS (so 2 => 5 slices)
 MSRB_KERNEL = "tri"           # "tri" or "gauss"
 MSRB_WIDTH_MM = 2.0 * DZ      # kernel width parameter in mm:
                               # tri: weights go to 0 at |dz|=MSRB_WIDTH_MM

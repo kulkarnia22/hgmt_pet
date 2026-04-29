@@ -10,6 +10,7 @@
 #include <string.h>
 
 void read_event(event *new_event, FILE *source, double eff_by_energy[COLS]);
+bool read_nema_lor(nema_lor *new_nema_lor, FILE *source);
 bool read_annihilation(annihilation *new_annihilation, FILE *source,
                        double eff_by_energy[COLS]);
 void print_lor(lor *new_lor, FILE *output);

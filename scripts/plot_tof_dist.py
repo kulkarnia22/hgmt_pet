@@ -39,6 +39,7 @@ non_scattered_centers = 0.5 * (non_scattered_edges[:-1] + non_scattered_edges[1:
 
 # ---- plot ----
 plt.figure()
+plt.yscale("log")
 plt.plot(scattered_centers, scattered_counts,
          color="red", label="scattered")
 plt.plot(non_scattered_centers, non_scattered_counts,
@@ -47,5 +48,5 @@ plt.xlabel("tof diff (ns)")
 plt.ylabel("Counts")
 plt.title("TOF Distribution In Patient v.s Non In Patient")
 plt.legend()
-plt.savefig("plots/scattered_tof_plot.png")
+plt.savefig("plots/scattered_tof_plot_log.png")
 plt.show()
