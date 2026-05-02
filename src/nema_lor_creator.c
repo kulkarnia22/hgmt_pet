@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     print_lor(&out_lor, output_file);
 
     count++;
-    if (count % 1000000000 == 0) {
+    if (count % 100000000 == 0) {
         printf("Processed %llu LORs\n", count);
     }
   }

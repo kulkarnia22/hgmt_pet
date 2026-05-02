@@ -394,6 +394,7 @@ def main():
 
         # Normalize sinogram by its total "weight" so slices are comparable in scale
         # (doesn't affect FWHM, only intensity scaling)
+        #Come back to this!
         sino = sino * (1.0 / max(total_counts, EPS))
 
         # Filter each projection

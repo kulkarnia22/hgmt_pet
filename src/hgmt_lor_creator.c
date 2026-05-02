@@ -817,7 +817,7 @@ int main(int argc, char **argv) {
 
   if (writing_to_lor) {
     char *lor_file_loc;
-    asprintf(&lor_file_loc, "%sHGMTMiniDerenzoBad.lor", args[2]);
+    asprintf(&lor_file_loc, "%sHGMTPointVac.lor", args[2]);
     lor_output = fopen(lor_file_loc, "wb");
     free(lor_file_loc);
 

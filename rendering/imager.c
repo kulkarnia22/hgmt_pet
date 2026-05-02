@@ -505,7 +505,7 @@ int main(int argc, char **argv) {
  
   lor_file = fopen(args[0], "rb");
   char *filename;
-  asprintf(&filename, "%simage_mini_derenzo_bad.voxels", args[1]);
+  asprintf(&filename, "%simage_nema_iq1st1bilfilter.voxels", args[1]);
   output = fopen(filename, "wb");
   free(filename);
  
@@ -533,7 +533,7 @@ int main(int argc, char **argv) {
   uint num_lors  = 0;
   uint num_comps = 0;
   printf("First pass, creating heatmap as first guess...\n");
-  printf("X_RES = %d | Y_RES = %d | Z_RES = %d\n", X_RES, Y_RES, Z_RES);
+  //printf("X_RES = %d | Y_RES = %d | Z_RES = %d\n", X_RES, Y_RES, Z_RES);
   printf("X_LENGTH = %.1f | Y_LENGTH = %.1f | Z_LENGTH = %.1f cm\n",
          X_LENGTH, Y_LENGTH, Z_LENGTH);
  
